@@ -170,6 +170,7 @@ document.querySelector<HTMLElement>('.view-toggle')!.hidden = false;
 readURL();
 const surpriseRequested = new URLSearchParams(location.search).get('surprise') === '1';
 update(false);
+document.querySelector<HTMLFieldSetElement>('#filter-controls')!.disabled = false;
 if (surpriseRequested) random();
 window.addEventListener('popstate', () => {
   readURL();

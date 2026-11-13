@@ -76,34 +76,36 @@ const structured = [
     </header>
     <div class="page-body" id="explorer">
       <form class="filter-panel" id="filters" role="search">
-        <div class="filter-row">
-          <div>
-            <label for="search">Find a place, filling or street</label>
-            <input
-              id="search"
-              name="q"
-              type="search"
-              placeholder="Try carnitas, Sunset, or El Farolito"
-              autocomplete="off"
-            />
+        <fieldset id="filter-controls" disabled aria-label="Search and filter places">
+          <div class="filter-row">
+            <div>
+              <label for="search">Find a place, filling or street</label>
+              <input
+                id="search"
+                name="q"
+                type="search"
+                placeholder="Try carnitas, Sunset, or El Farolito"
+                autocomplete="off"
+              />
+            </div>
+            <div>
+              <label for="neighborhood">Neighborhood</label>
+              <select id="neighborhood" name="neighborhood">
+                <option value="">All over the city</option>
+                {neighborhoods.map((n) => (
+                  <option value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="neighborhood">Neighborhood</label>
-            <select id="neighborhood" name="neighborhood">
-              <option value="">All over the city</option>
-              {neighborhoods.map((n) => (
-                <option value={n}>{n}</option>
-              ))}
-            </select>
+          <div class="chips" role="group" aria-label="Burrito style">
+            {categories.map((c) => (
+              <button class="chip" type="button" data-style={c.id} aria-pressed={c.id === 'all'}>
+                {c.name}
+              </button>
+            ))}
           </div>
-        </div>
-        <div class="chips" role="group" aria-label="Burrito style">
-          {categories.map((c) => (
-            <button class="chip" type="button" data-style={c.id} aria-pressed={c.id === 'all'}>
-              {c.name}
-            </button>
-          ))}
-        </div>
+        </fieldset>
       </form>
       <noscript>
         <p class="status-note">
