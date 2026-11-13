@@ -1,0 +1,19 @@
+{
+  "name": "sf-burrito-catalog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A sourced catalog of San Francisco burritos, locations, hours and reviews.",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "test": "node --test",
+    "check": "npm run validate && npm test && npm run check:index",
+    "build:index": "node scripts/build-index.mjs",
+    "check:index": "node scripts/build-index.mjs --check"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}
