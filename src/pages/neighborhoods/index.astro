@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import { neighborhoods, inNeighborhood, slug, path } from '../../lib/catalog';
+---
+
+<Base
+  title="Burritos by San Francisco neighborhood"
+  description="Explore burrito places across San Francisco, from the Mission to the Sunset, Richmond, Excelsior and beyond."
+>
+  <div class="wrap">
+    <header class="page-heading">
+      <p class="eyebrow">ALL OVER THE CITY</p>
+      <h1>
+        Pick a neighborhood.
+        <br />
+        <em>Bring an appetite.</em>
+      </h1>
+      <p class="dek">
+        A good lunch can be a reason to cross town. Find listed branches near you, with their own
+        addresses and hours.
+      </p>
+    </header>
+    <div class="page-body neighborhood-directory">
+      {neighborhoods.map((n) => (
+        <a href={path(`neighborhoods/${slug(n)}/`)}>
+          {n}
+          <span>
+            {inNeighborhood(n).length} {inNeighborhood(n).length === 1 ? 'place' : 'places'} ↗
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { path } from '../lib/catalog';
+---
+
+<Base title="This wrap got away" noindex>
+  <div class="wrap">
+    <header class="page-heading">
+      <p class="eyebrow">404 / NO BURRITO HERE</p>
+      <h1>
+        This wrap
+        <br />
+        <em>got away.</em>
+      </h1>
+      <p class="dek">The field guide is still full of good places to start.</p>
+      <a class="button primary" href={path('explore/')}>
+        Back to the guide →
+      </a>
+    </header>
+  </div>
+</Base>

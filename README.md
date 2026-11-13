@@ -1,10 +1,10 @@
 # burrito
 
-[![Validate catalog](https://github.com/mldangelo/burrito/actions/workflows/validate.yml/badge.svg)](https://github.com/mldangelo/burrito/actions/workflows/validate.yml)
+[![Build and deploy field guide](https://github.com/mldangelo/burrito/actions/workflows/validate.yml/badge.svg)](https://github.com/mldangelo/burrito/actions/workflows/validate.yml)
 
 A sourced catalog of San Francisco burritos: Mission classics, California-style burritos, breakfast, seafood, vegetarian options and neighborhood taquerias across the city.
 
-**[Browse the catalog](CATALOG.md)** · **[JSON data](data/places.json)** · **[JSON Schema](schema/catalog.schema.json)**
+**[Open the field guide](https://mldangelo.github.io/burrito/)** · **[Browse the Markdown catalog](CATALOG.md)** · **[JSON data](data/places.json)** · **[JSON Schema](schema/catalog.schema.json)**
 
 The initial research snapshot is **November 13, 2026**: **58 businesses**, including 54 catalog entries, two history stops and two unconfirmed opening/reopening leads. There are 83 location records: 80 listed locations, two announced locations and one former address preserved to identify older reviews. This is a broad curated index, not an exhaustive census or a firsthand tasting ranking.
 
@@ -86,3 +86,36 @@ npm run check
 ```
 
 `CATALOG.md` is generated from the JSON, and CI rejects a stale index. See [CONTRIBUTING.md](CONTRIBUTING.md) for evidence standards and conventional commit examples.
+
+## Field guide and GitHub Pages
+
+The frontend lives in this repository and is generated with Astro. GitHub Actions validates the data, builds the static pages, checks exports and internal links, and deploys the `dist/` artifact to **https://mldangelo.github.io/burrito/** after a successful main-branch build. Pull requests run the same checks without deploying. GitHub Pages uses **GitHub Actions** as its source.
+
+```sh
+npm ci --ignore-scripts
+ASTRO_TELEMETRY_DISABLED=1 npm run dev
+# Open http://localhost:4321/burrito/
+ASTRO_TELEMETRY_DISABLED=1 npm run check
+ASTRO_TELEMETRY_DISABLED=1 npm run preview
+```
+
+The Astro `site` and `base` settings in `astro.config.mjs` define canonical URLs and the project path. Keep all internal links and asset paths under `/burrito/`. Fonts, original SVG artwork and the social image are served locally. There are no accounts, passport features, analytics or browser storage. Map tiles come from OpenStreetMap only when the map view is opened; the coordinate provenance is documented in [data/GEOCODING.md](data/GEOCODING.md).
+
+The guide includes full static place pages, five curated guides, neighborhood pages, client-side search and filters, and a map of approximate address points. Unknown, conflicting, ordering-only and branch-specific information remain visible.
+
+### Agent and search discovery
+
+- Static semantic HTML and ordinary links expose the complete guide without JavaScript.
+- Each page has a canonical URL, descriptive metadata and a social preview.
+- JSON-LD describes the website, place lists, listed restaurant branches and downloadable dataset. Only complete restaurant schedules are emitted as restaurant opening hours. No invented ratings, review scores or live availability.
+- [`sitemap.xml`](https://mldangelo.github.io/burrito/sitemap.xml) lists canonical HTML pages.
+- [`llms.txt`](https://mldangelo.github.io/burrito/llms.txt) provides a reading index and interpretation rules. It is a convenience, not a search-ranking promise or universal crawler standard.
+- [`data/places.json`](https://mldangelo.github.io/burrito/data/places.json) is identical to the canonical catalog; its relative schema link resolves on Pages.
+- `/burrito/data/places/{id}.json` includes one record and its referenced sources, validated by `schema/place-export.schema.json`; `.md` provides a plain-text equivalent.
+- `/burrito/data/catalog.md` provides the complete Markdown export. `/burrito/schema/` publishes all three schemas.
+
+A project-scoped `/burrito/robots.txt` would not control crawlers for the host, so none is published. Crawler directives belong at the origin root; this project uses page-level robots metadata and a linked sitemap. It does not modify another repository or claim control over `mldangelo.github.io/robots.txt`.
+
+### Checks
+
+`npm run check` validates the catalog, confirms the generated Markdown index, builds the guide, and runs the test suite. The web checks cover static discovery, every branch and cited source, JSON exports and schemas, map-record references, structured-data scope, sitemap coverage, base paths and internal links/fragments. Browser QA should also cover search, combined filters, empty/reset behavior, random selection, map/list switching, keyboard use and narrow mobile layouts.

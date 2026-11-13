@@ -1,0 +1,34 @@
+---
+import { path, primary, shortName, order, evidence, label } from '../lib/catalog';
+const { place: p, number, neighborhood } = Astro.props;
+const loc = neighborhood
+  ? p.locations.find((l) => l.neighborhood === neighborhood && l.operating_status === 'listed')
+  : primary(p);
+const linkedOrder = p.standout_items.find((i) => i.location_ids.includes(loc.id));
+---
+
+<article class="place-card" data-place-id={p.id}>
+  <div class="card-meta">
+    <span>{loc.neighborhood}</span>
+    {number && <span class="card-number">{String(number).padStart(2, '0')}</span>}
+  </div>
+  <h3>
+    <a href={path(`places/${p.id}/`)}>
+      {shortName(p)} <span aria-hidden="true">↗</span>
+    </a>
+  </h3>
+  <p class="card-order">{linkedOrder?.name ?? 'Explore this branch'}</p>
+  <p class="card-summary">
+    {loc.id === p.primary_location_id
+      ? p.summary
+      : 'This branch is listed for discovery. Check the entry for the exact location covered by a review.'}
+  </p>
+  <div class="card-bottom">
+    <span class="evidence">
+      {loc.id === p.primary_location_id ? evidence(p) : 'Additional branch'}
+    </span>
+    <a class="text-link" href={path(`places/${p.id}/#${loc.id}`)}>
+      Hours & details <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</article>

@@ -4,16 +4,32 @@
   "private": true,
   "description": "A sourced catalog of San Francisco burritos, locations, hours and reviews.",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22.23.4"
+  },
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "test": "node --test",
-    "check": "npm run validate && npm test && npm run check:index",
+    "check": "npm run validate && npm run check:index && npm run format:check && npm run build && npm test",
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1",
     "build:index": "node scripts/build-index.mjs",
-    "check:index": "node scripts/build-index.mjs --check"
+    "check:index": "node scripts/build-index.mjs --check",
+    "format": "prettier --write src test/web.test.mjs astro.config.mjs tsconfig.json",
+    "format:check": "prettier --check src test/web.test.mjs astro.config.mjs tsconfig.json"
   },
   "devDependencies": {
     "ajv": "8.20.0",
-    "ajv-formats": "3.0.1"
+    "ajv-formats": "3.0.1",
+    "cheerio": "1.2.0",
+    "prettier": "3.10.1",
+    "prettier-plugin-astro": "1.1.2"
+  },
+  "dependencies": {
+    "@fontsource-variable/dm-sans": "5.3.0",
+    "@fontsource-variable/fraunces": "5.3.0",
+    "astro": "7.4.11",
+    "leaflet": "1.9.4"
   }
 }

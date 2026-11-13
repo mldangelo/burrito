@@ -12,3 +12,13 @@
 - Keep announced, closed and unconfirmed locations out of active recommendation counts.
 - Use original concise summaries and source links. Do not copy full reviews or menus.
 - Do not add credentials, private personal data, analytics, or unrelated files.
+
+## Field guide
+
+- Keep Pages deployment in this repository. Do not add a separate hosting service or passport/account features.
+- Build with `ASTRO_TELEMETRY_DISABLED=1 npm run check`; use `npm run dev` / `npm run preview` for browser review.
+- All internal URLs must respect the `/burrito/` base. New indexable routes belong in `src/pages/sitemap.xml.ts`.
+- Keep essential content and source links in static HTML. Client-side filters and maps are progressive enhancements.
+- Do not emit ordering windows, unknown or conflicting schedules as Restaurant opening hours in JSON-LD.
+- Coordinates live separately in `data/geocodes.json`; keep Census provenance and approximate-position notices. See `data/GEOCODING.md`.
+- Verify desktop and narrow mobile layouts and the complete primary flow. Stub OSM tiles in automated map checks; do not automate bulk map panning.

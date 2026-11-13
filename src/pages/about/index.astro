@@ -1,0 +1,115 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog, watchlist, path, dateLabel } from '../../lib/catalog';
+---
+
+<Base
+  title="How the field guide works"
+  description="Our approach to San Francisco burrito research: sources, review labels, branch-specific orders, posted hours, uncertainties and updates."
+>
+  <div class="wrap">
+    <header class="page-heading">
+      <p class="eyebrow">GOOD BURRITOS. RECEIPTS INCLUDED.</p>
+      <h1>
+        A guide with
+        <br />
+        <em>a paper trail.</em>
+      </h1>
+      <p class="dek">
+        A starting point for your own opinions, built from critical reviews, restaurant information
+        and a little curiosity about the whole city.
+      </p>
+    </header>
+    <div class="page-body prose reading-width">
+      <h2>What makes the cut?</h2>
+      <p>
+        This is a curated research catalog, not an exhaustive census or a firsthand tasting ranking.
+        We look for respectable burritos across San Francisco: Mission standards, fries-inside
+        California versions, breakfast, seafood and meat alternatives. The source matters as much as
+        the recommendation.
+      </p>
+      <ul>
+        <li>
+          <strong>Burrito review:</strong> independent criticism specifically discussing the
+          burrito.
+        </li>
+        <li>
+          <strong>Restaurant coverage:</strong> broader coverage of the restaurant or its tacos,
+          paired with current menu information. It is not a burrito verdict.
+        </li>
+        <li>
+          <strong>Archive pick:</strong> an older burrito review. A useful lead, with no claim that
+          today’s experience is unchanged.
+        </li>
+        <li>
+          <strong>Neighborhood candidate:</strong> menu or local evidence supports inclusion;
+          dedicated burrito criticism is still missing.
+        </li>
+        <li>
+          <strong>History stop:</strong> a place in the city’s burrito story, distinguished from a
+          current critical recommendation.
+        </li>
+      </ul>
+      <h2>A branch is a branch.</h2>
+      <p>
+        Orders, reviews and descriptions of the setting apply to the location explicitly identified.
+        Extra branches have their own address and hours. A review of the Mission flagship does not
+        become a review of every other location.
+      </p>
+      <p>
+        “Source summary” means a description drawn from a cited source. “Format inference” means an
+        interpretation of the venue format. Neither claims we visited.
+      </p>
+      <h2>Hours, honestly.</h2>
+      <p>
+        Schedules are posted hours in <code>America/Los_Angeles</code>, not real-time availability.
+        Restaurant hours, kitchen hours, online ordering and truck schedules are labeled separately.
+        Unknown days stay unknown, conflicts stay visible, and overnight windows say “next day.”
+        Check the operator before a special trip.
+      </p>
+      <p>
+        “Listed” means a source lists that location. “Published” means the source supplies a
+        complete weekly schedule. Neither label establishes that the doors are open right now.
+      </p>
+      <h2>When was this checked?</h2>
+      <p>
+        The catalog snapshot is <strong>{dateLabel(catalog.updated_on)}</strong>. Each source
+        records a research date and, when known, a publication date. A recent research date does not
+        turn an old review into a new tasting. This is a maintained repository, not a live
+        restaurant feed.
+      </p>
+      <h2>About the map.</h2>
+      <p>
+        73 of the 80 listed location records have an exact address match from the{' '}
+        <a href="https://www.census.gov/programs-surveys/geography/technical-documentation/complete-technical-documentation/census-geocoder.html">
+          U.S. Census Bureau Geocoder
+        </a>
+        . Those points are interpolated along address ranges, so they are approximate positions, not
+        verified entrances or proof of a business’s presence. Seven unmatched or truck locations
+        remain accessible in the list. Background maps are from{' '}
+        <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>.
+      </p>
+      <h2 id="watchlist">On the watchlist.</h2>
+      <p>
+        These leads have no confirmed opening or reopening. They are excluded from the 56 catalog
+        and history stops and from the active map.
+      </p>
+      <ul>
+        {watchlist.map((p) => (
+          <li>
+            <a href={path(`places/${p.id}/`)}>{p.name}</a> — {p.summary}
+          </li>
+        ))}
+      </ul>
+      <h2>Help keep it useful.</h2>
+      <p>
+        Found a changed menu, a closure, or a missing contender?{' '}
+        <a href="https://github.com/mldangelo/burrito/issues/new">Open a GitHub issue</a> with a
+        source and the exact branch. The{' '}
+        <a href="https://github.com/mldangelo/burrito">public repository</a> contains the complete
+        JSON catalog, schemas, research notes and build code.{' '}
+        <a href={path('data/')}>Browse the data exports.</a>
+      </p>
+    </div>
+  </div>
+</Base>

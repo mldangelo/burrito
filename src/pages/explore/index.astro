@@ -1,0 +1,174 @@
+---
+import Base from '../../layouts/Base.astro';
+import PlaceCard from '../../components/PlaceCard.astro';
+import {
+  currentPlaces,
+  path,
+  absolute,
+  neighborhoods,
+  categories,
+  evidence,
+} from '../../lib/catalog';
+import geocodes from '../../../data/geocodes.json';
+const cards = currentPlaces.map((p) => ({
+  id: p.id,
+  name: p.name,
+  primaryLocationId: p.primary_location_id,
+  summary: p.summary,
+  evidence: evidence(p),
+  styles: p.styles,
+  search: [
+    p.name,
+    p.summary,
+    ...p.styles,
+    ...p.standout_items.map((i) => i.name),
+    ...p.locations
+      .filter((l) => l.operating_status === 'listed')
+      .flatMap((l) => [l.neighborhood, l.address.street_address]),
+  ].join(' '),
+  neighborhoods: p.locations
+    .filter((l) => l.operating_status === 'listed')
+    .map((l) => l.neighborhood),
+  url: path(`places/${p.id}/`),
+  locations: p.locations
+    .filter((l) => l.operating_status === 'listed')
+    .map((l) => ({
+      id: l.id,
+      name: l.name,
+      address: l.address.street_address,
+      neighborhood: l.neighborhood,
+      order:
+        p.standout_items.find((i) => i.location_ids.includes(l.id))?.name ?? 'Explore this branch',
+      url: path(`places/${p.id}/#${l.id}`),
+      maps_url: l.maps_url,
+      coordinates: geocodes.locations[l.id]
+        ? [geocodes.locations[l.id].latitude, geocodes.locations[l.id].longitude]
+        : null,
+    })),
+}));
+const structured = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'San Francisco burrito field guide',
+    itemListElement: currentPlaces.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: p.name,
+      url: absolute(`places/${p.id}/`),
+    })),
+  },
+];
+---
+
+<Base
+  title="Explore San Francisco burritos"
+  description="Search 56 San Francisco burrito catalog and history stops by neighborhood and style. Browse addresses, posted hours, critical reviews and a map."
+  structured={structured}
+>
+  <div class="wrap">
+    <header class="page-heading">
+      <p class="eyebrow">YOUR NEXT GOOD BURRITO</p>
+      <h1>Follow your appetite.</h1>
+      <p class="dek">
+        Across the Mission and beyond. Start with a craving, a neighborhood, or a happy accident.
+      </p>
+    </header>
+    <div class="page-body" id="explorer">
+      <form class="filter-panel" id="filters" role="search">
+        <div class="filter-row">
+          <div>
+            <label for="search">Find a place, filling or street</label>
+            <input
+              id="search"
+              name="q"
+              type="search"
+              placeholder="Try carnitas, Sunset, or El Farolito"
+              autocomplete="off"
+            />
+          </div>
+          <div>
+            <label for="neighborhood">Neighborhood</label>
+            <select id="neighborhood" name="neighborhood">
+              <option value="">All over the city</option>
+              {neighborhoods.map((n) => (
+                <option value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div class="chips" role="group" aria-label="Burrito style">
+          {categories.map((c) => (
+            <button class="chip" type="button" data-style={c.id} aria-pressed={c.id === 'all'}>
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </form>
+      <noscript>
+        <p class="status-note">
+          All {currentPlaces.length} entries are below. Search and the interactive map need
+          JavaScript; <a href={path('neighborhoods/')}>neighborhood pages</a> and{' '}
+          <a href={path('guides/')}>guides</a> work without it.
+        </p>
+      </noscript>
+      <div class="results-bar">
+        <span id="result-count" role="status" aria-live="polite">
+          {currentPlaces.length} places to unwrap
+        </span>
+        <button class="quiet-button" id="reset" type="button" hidden>
+          Clear filters
+        </button>
+        <button class="quiet-button" id="surprise" type="button" hidden>
+          Pick one for me ↗
+        </button>
+        <div class="view-toggle" hidden>
+          <button type="button" data-view="list" aria-pressed="true">
+            List
+          </button>
+          <button type="button" data-view="map" aria-pressed="false">
+            Map
+          </button>
+        </div>
+      </div>
+      <div id="list-view" class="place-grid">
+        {currentPlaces.map((p, i) => (
+          <PlaceCard place={p} number={i + 1} />
+        ))}
+      </div>
+      <section id="map-view" hidden aria-label="Burrito map">
+        <div id="map" aria-label="Map of approximate burrito locations"></div>
+        <p id="map-count" class="map-caption" role="status"></p>
+        <p class="map-caption">
+          Approximate street-address locations from the{' '}
+          <a href="https://www.census.gov/programs-surveys/geography/technical-documentation/complete-technical-documentation/census-geocoder.html">
+            U.S. Census Bureau
+          </a>
+          , checked November 13, 2026. Pins are interpolated addresses, not verified entrances. Some
+          trucks and unmatched addresses have no pin; they remain in the list.
+        </p>
+        <div id="unmapped"></div>
+      </section>
+      <div id="empty" class="empty-state" hidden>
+        <h2>No wraps in this corner.</h2>
+        <p>Try another neighborhood or a broader search.</p>
+        <button class="button" id="empty-reset" type="button">
+          Start fresh
+        </button>
+      </div>
+      <p class="map-caption">
+        Includes catalog entries and two history stops. Unconfirmed openings are on the{' '}
+        <a href={path('about/#watchlist')}>watchlist</a>. Branches do not inherit a reviewed
+        location’s verdict.
+      </p>
+    </div>
+  </div>
+  <script
+    id="explorer-data"
+    type="application/json"
+    set:html={JSON.stringify(cards).replace(/</g, '\u003c')}
+  />
+  <script>
+    import '../../scripts/explore';
+  </script>
+</Base>

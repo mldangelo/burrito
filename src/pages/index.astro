@@ -1,0 +1,132 @@
+---
+import Base from '../layouts/Base.astro';
+import BurritoArt from '../components/BurritoArt.astro';
+import PlaceCard from '../components/PlaceCard.astro';
+import GuideCards from '../components/GuideCards.astro';
+import { currentPlaces, places, path, categories, neighborhoods, slug } from '../lib/catalog';
+const picks = [
+  'el-farolito',
+  'leos',
+  'hook-fish',
+  'breakfast-little',
+  'la-corneta',
+  'papalote',
+].map((id) => places.find((p) => p.id === id));
+---
+
+<Base>
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="eyebrow">GOOD FOOD. ALL OVER THE CITY.</p>
+      <h1>
+        A city worth
+        <br />
+        <em>unwrapping.</em>
+      </h1>
+      <p class="dek">
+        Mission classics, fries inside, breakfast legends.
+        <br class="desktop-break" /> Your next good burrito is out there.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href={path('explore/')}>
+          Find your next burrito <span aria-hidden="true">↗</span>
+        </a>
+        <a class="text-link" href={path('explore/?surprise=1')}>
+          Surprise me →
+        </a>
+      </div>
+    </div>
+    <BurritoArt />
+  </section>
+  <div class="ticker">
+    <div class="wrap">
+      <span>{currentPlaces.length} CATALOG & HISTORY STOPS</span>
+      <span>MISSION → OCEAN BEACH → EVERYWHERE BETWEEN</span>
+    </div>
+  </div>
+  <section class="section wrap">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">FOLLOW YOUR APPETITE</p>
+        <h2>What are you craving?</h2>
+      </div>
+      <a class="text-link" href={path('explore/')}>
+        Explore all {currentPlaces.length} →
+      </a>
+    </div>
+    <div class="chips">
+      {categories.map((c) => (
+        <a
+          class:list={['chip', { selected: c.id === 'all' }]}
+          href={path('explore/') + (c.id === 'all' ? '' : `?style=${c.id}`)}
+        >
+          {c.name}
+        </a>
+      ))}
+    </div>
+    <div class="place-grid">
+      {picks.map((p, i) => (
+        <PlaceCard place={p} number={i + 1} />
+      ))}
+    </div>
+  </section>
+  <section class="section wrap section-rule">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">A FEW GOOD WAYS IN</p>
+        <h2>Field notes for the hungry.</h2>
+      </div>
+      <a class="text-link" href={path('guides/')}>
+        All the guides →
+      </a>
+    </div>
+    <GuideCards limit={3} />
+  </section>
+  <section class="neighborhood-band">
+    <div class="wrap neighborhood-layout">
+      <div>
+        <p class="eyebrow">TAKE THE LONG WAY TO LUNCH</p>
+        <h2>
+          Every neighborhood
+          <br />
+          has a good story.
+        </h2>
+        <p>Follow a familiar favorite. Or cross town for something new.</p>
+        <a class="text-link" href={path('neighborhoods/')}>
+          Browse the neighborhoods →
+        </a>
+      </div>
+      <div class="neighborhood-cloud">
+        {[
+          'Mission',
+          'Outer Sunset',
+          'Excelsior',
+          'Glen Park',
+          'Inner Richmond',
+          'Haight-Ashbury',
+          'Potrero Hill',
+          'Cow Hollow',
+        ]
+          .filter((n) => neighborhoods.includes(n))
+          .map((n) => (
+            <a href={path(`neighborhoods/${slug(n)}/`)}>{n} ↗</a>
+          ))}
+      </div>
+    </div>
+  </section>
+  <section class="about-note wrap">
+    <span class="note-mark" aria-hidden="true">
+      *
+    </span>
+    <div>
+      <h2>Good taste. A paper trail.</h2>
+      <p>
+        This is a researched guide, not a personal ranking. Every pick links to its evidence.
+        Burrito reviews, restaurant coverage and menu finds get their own labels.
+      </p>
+      <a class="text-link" href={path('about/')}>
+        Read our approach →
+      </a>
+    </div>
+  </section>
+</Base>

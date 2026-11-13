@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/mldangelo/burrito/main/schema/geocodes.schema.json",
+  "title": "Approximate burrito address coordinates",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "checked_on",
+    "description",
+    "locations"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../schema/geocodes.schema.json"
+    },
+    "checked_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locations": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "latitude",
+          "longitude",
+          "matched_address",
+          "query_address",
+          "provider",
+          "source_url",
+          "reproduce_url",
+          "checked_on",
+          "benchmark",
+          "match_quality",
+          "accuracy_note",
+          "tiger_line_id",
+          "tiger_line_side"
+        ],
+        "properties": {
+          "matched_address": {
+            "type": "string",
+            "minLength": 1
+          },
+          "query_address": {
+            "type": "string",
+            "minLength": 1
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uri"
+          },
+          "reproduce_url": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uri"
+          },
+          "benchmark": {
+            "type": "string",
+            "minLength": 1
+          },
+          "match_quality": {
+            "const": "exact_address_match_interpolated"
+          },
+          "accuracy_note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tiger_line_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tiger_line_side": {
+            "type": "string",
+            "minLength": 1
+          },
+          "normalization_note": {
+            "type": "string",
+            "minLength": 1
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": 37.7,
+            "maximum": 37.84
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -122.53,
+            "maximum": -122.35
+          },
+          "checked_on": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    }
+  }
+}

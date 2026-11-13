@@ -1,0 +1,22 @@
+---
+import { sourceMap, dateLabel, label } from '../lib/catalog';
+const { ids } = Astro.props;
+---
+
+<ul class="source-links">
+  {ids.map((id) => {
+    const s = sourceMap.get(id);
+    return (
+      s && (
+        <li>
+          <a href={s.url}>{s.title} ↗</a>
+          <span>
+            {label(s.kind)}
+            {s.published_on ? ` · Published ${dateLabel(s.published_on)}` : ''} · Checked{' '}
+            {dateLabel(s.checked_on)}
+          </span>
+        </li>
+      )
+    );
+  })}
+</ul>

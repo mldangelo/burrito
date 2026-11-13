@@ -1,0 +1,152 @@
+---
+import Base from '../../layouts/Base.astro';
+import { catalog, path, absolute, dateLabel } from '../../lib/catalog';
+const structured = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    '@id': absolute('data/') + '#dataset',
+    name: catalog.title,
+    description:
+      'A curated, source-linked catalog of 58 San Francisco burrito businesses and 83 branch records, including 56 catalog/history entries and two unconfirmed opening leads. Addresses, posted weekly hours, branch-specific orders, review evidence and research dates.',
+    url: absolute('data/'),
+    dateModified: catalog.updated_on,
+    creator: { '@type': 'Person', name: 'Michael DAngelo', url: 'https://github.com/mldangelo' },
+    spatialCoverage: { '@type': 'Place', name: 'San Francisco, California, United States' },
+    isAccessibleForFree: true,
+    keywords: ['San Francisco', 'burritos', 'restaurant hours', 'food guide'],
+    distribution: [
+      {
+        '@type': 'DataDownload',
+        encodingFormat: 'application/json',
+        contentUrl: absolute('data/places.json'),
+      },
+      {
+        '@type': 'DataDownload',
+        encodingFormat: 'text/markdown',
+        contentUrl: absolute('data/catalog.md'),
+      },
+    ],
+    isBasedOn: 'https://github.com/mldangelo/burrito',
+  },
+];
+---
+
+<Base
+  title="Burrito data & agent resources"
+  description="Download the source-linked San Francisco burrito JSON catalog, JSON Schemas, per-place Markdown and structured data. No API key required."
+  structured={structured}
+>
+  <div class="wrap">
+    <header class="page-heading">
+      <p class="eyebrow">THE OPEN NOTEBOOK</p>
+      <h1>
+        Made for people.
+        <br />
+        <em>Readable by agents.</em>
+      </h1>
+      <p class="dek">
+        The same sourced records power the guide and the downloads. Stable IDs, explicit unknowns,
+        and a paper trail for every recommendation.
+      </p>
+    </header>
+    <div class="page-body prose reading-width">
+      <h2>Start with the catalog.</h2>
+      <p>
+        Snapshot: <strong>{dateLabel(catalog.updated_on)}</strong>. 58 businesses, 83 branch
+        records, 167 sources. The 56 catalog and history stops are distinct from two unconfirmed
+        opening leads.
+      </p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Resource</th>
+            <th scope="col">What’s inside</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <a href={path('data/places.json')}>Full JSON catalog</a>
+            </td>
+            <td>Canonical restaurant records and the complete source registry.</td>
+          </tr>
+          <tr>
+            <td>
+              <a href={path('schema/catalog.schema.json')}>Catalog JSON Schema</a>
+            </td>
+            <td>Draft 2020-12 schema with explicit data types and states.</td>
+          </tr>
+          <tr>
+            <td>
+              <a href={path('data/catalog.md')}>Full Markdown guide</a>
+            </td>
+            <td>Every place, branch, schedule and cited source in plain text.</td>
+          </tr>
+          <tr>
+            <td>
+              <a href={path('llms.txt')}>llms.txt</a>
+            </td>
+            <td>A compact reading index and interpretation notes.</td>
+          </tr>
+          <tr>
+            <td>
+              <a href={path('sitemap.xml')}>Sitemap</a>
+            </td>
+            <td>Canonical HTML pages, including place and neighborhood pages.</td>
+          </tr>
+          <tr>
+            <td>
+              <a href={path('data/geocodes.json')}>Address coordinates</a>
+            </td>
+            <td>
+              73 approximate Census address points with provenance;{' '}
+              <a href={path('schema/geocodes.schema.json')}>schema</a>.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>One place at a time.</h2>
+      <p>Each place page links its machine-readable versions. For example:</p>
+      <ul>
+        <li>
+          <a href={path('places/el-farolito/')}>El Farolito · HTML</a>
+        </li>
+        <li>
+          <a href={path('data/places/el-farolito.json')}>El Farolito · JSON with its sources</a>
+        </li>
+        <li>
+          <a href={path('data/places/el-farolito.md')}>El Farolito · Markdown</a>
+        </li>
+        <li>
+          <a href={path('schema/place-export.schema.json')}>Per-place export schema</a>
+        </li>
+      </ul>
+      <h2>Interpretation matters.</h2>
+      <ul>
+        {catalog.methodology.map((m) => (
+          <li>{m}</li>
+        ))}
+      </ul>
+      <h2>How discovery works.</h2>
+      <p>
+        The guide is generated as static HTML. All entries, hours, sources and ordinary links are
+        available without running JavaScript. Search and the map add convenience. Pages include
+        canonical URLs, descriptive metadata, and Schema.org WebSite, ItemList, Restaurant or
+        Dataset data where appropriate.
+      </p>
+      <p>
+        The <code>llms.txt</code> file is a convenience for agents, not a guarantee of crawler
+        support, inclusion or search ranking. There is no special access requirement or API key.
+      </p>
+      <h2>Source and contributions.</h2>
+      <p>
+        The code and canonical records live in{' '}
+        <a href="https://github.com/mldangelo/burrito">mldangelo/burrito on GitHub</a>. Cite
+        original reviews for their judgments and the linked operator for current service details.
+        Restaurant information and third-party sources retain their own terms; this guide does not
+        relicense those sources.
+      </p>
+    </div>
+  </div>
+</Base>

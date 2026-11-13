@@ -1,0 +1,18 @@
+---
+import { guides } from '../lib/guides';
+import { path } from '../lib/catalog';
+const { limit = guides.length } = Astro.props;
+---
+
+<div class="guide-grid">
+  {guides.slice(0, limit).map((g, i) => (
+    <a class={`guide-card guide-${i}`} href={path(`guides/${g.id}/`)}>
+      <span class="eyebrow">FIELD NOTES / {String(i + 1).padStart(2, '0')}</span>
+      <h3>{g.title}</h3>
+      <p>{g.label}</p>
+      <span class="guide-arrow" aria-hidden="true">
+        ↗
+      </span>
+    </a>
+  ))}
+</div>

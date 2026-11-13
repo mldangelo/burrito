@@ -1,0 +1,247 @@
+---
+import Base from '../../layouts/Base.astro';
+import BurritoArt from '../../components/BurritoArt.astro';
+import Sources from '../../components/Sources.astro';
+import {
+  places,
+  path,
+  absolute,
+  primary,
+  shortName,
+  description,
+  branchEntities,
+  evidence,
+  evidenceLabels,
+  label,
+  dateLabel,
+  formatWindows,
+  scopeLabels,
+} from '../../lib/catalog';
+export function getStaticPaths() {
+  return places.map((place) => ({ params: { id: place.id }, props: { place } }));
+}
+const { place: p } = Astro.props;
+const scope = (ids: string[]) => p.locations.filter((l) => ids.includes(l.id));
+const structured = [
+  {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': absolute(`places/${p.id}/`),
+        name: p.name,
+        description: description(p),
+        dateModified: p.checked_on,
+        mainEntity: branchEntities(p).map((b) => ({ '@id': b['@id'] })),
+      },
+      ...branchEntities(p),
+    ],
+  },
+];
+---
+
+<Base title={shortName(p)} description={description(p)} structured={structured}>
+  <div class="wrap">
+    <section class="place-hero">
+      <div>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href={path()}>Home</a>
+          <span>/</span>
+          <a href={path('explore/')}>The field guide</a>
+          <span>/</span>
+          <span>{shortName(p)}</span>
+        </nav>
+        <p class="eyebrow">
+          {primary(p).neighborhood} · {evidence(p)}
+        </p>
+        <h1>{shortName(p)}</h1>
+        <p class="dek">{p.summary}</p>
+        <div class="tag-row">
+          {p.styles.map((s) => (
+            <span class="tag">{label(s)}</span>
+          ))}
+        </div>
+        <div class="export-links">
+          <a href={path(`data/places/${p.id}.md`)}>Markdown</a>
+          <a href={path(`data/places/${p.id}.json`)}>JSON & sources</a>
+        </div>
+      </div>
+      <BurritoArt />
+    </section>
+    {p.status === 'watchlist' && (
+      <p class="status-note">
+        <strong>Opening unconfirmed.</strong> This is a research lead, not a current recommendation.
+        No confirmed opening date or service schedule is available.
+      </p>
+    )}
+    {p.status === 'history' && (
+      <p class="status-note">
+        <strong>A history stop.</strong> Included for its place in San Francisco’s burrito story.
+        The evidence label distinguishes history from current critical praise.
+      </p>
+    )}
+    <div class="place-layout">
+      <div class="place-story">
+        <section>
+          <p class="eyebrow">THE ORDER</p>
+          <h2>Start here.</h2>
+          {p.standout_items.map((i) => (
+            <div class="order-block">
+              <h3>{i.name}</h3>
+              <p class="small">Basis: {label(i.basis)}. Availability may change.</p>
+              <div class="scope-list">
+                <span>Applies to:</span>
+                {scope(i.location_ids).map((l) => (
+                  <a href={'#' + l.id}>
+                    {l.address.street_address}
+                    {l.operating_status === 'closed' ? ' (former address)' : ''}
+                  </a>
+                ))}
+              </div>
+              {i.notes.map((n) => (
+                <p>{n}</p>
+              ))}
+              <Sources ids={i.source_ids} />
+            </div>
+          ))}
+        </section>
+        <section>
+          <p class="eyebrow">THE SETTING</p>
+          <h2>What’s the vibe?</h2>
+          <p>
+            {p.vibe.summary ??
+              'We haven’t established enough evidence to describe the setting yet.'}
+          </p>
+          <p class="small">
+            {p.vibe.basis === 'format_inference'
+              ? 'An interpretation of the venue format, not a firsthand visit.'
+              : p.vibe.basis === 'source_summary'
+                ? 'Summarized from the linked sources; not a firsthand visit.'
+                : 'Vibe not yet confirmed.'}
+          </p>
+          <div class="scope-list">
+            {scope(p.vibe.location_ids).map((l) => (
+              <a href={'#' + l.id}>{l.address.street_address}</a>
+            ))}
+          </div>
+          <Sources ids={p.vibe.source_ids} />
+        </section>
+        <section>
+          <p class="eyebrow">THE PAPER TRAIL</p>
+          <h2>Why it’s in the guide.</h2>
+          {p.reviews.map((r) => (
+            <div class="order-block">
+              <span class="evidence">{evidenceLabels[r.evidence]}</span>
+              <p style="margin-top:12px">{r.summary}</p>
+              <div class="scope-list">
+                <span>Coverage:</span>
+                {scope(r.location_ids).map((l) => (
+                  <a href={'#' + l.id}>
+                    {l.address.street_address}
+                    {l.operating_status === 'closed' ? ' (former address)' : ''}
+                  </a>
+                ))}
+              </div>
+              <Sources ids={r.source_ids} />
+            </div>
+          ))}
+          <p class="small">
+            Coverage of one branch does not establish the same verdict at another. Older reviews
+            describe the experience at publication, not a current tasting.
+          </p>
+        </section>
+        {p.visit_notes.length > 0 && (
+          <section>
+            <h2>Before you go.</h2>
+            <ul class="bullet-notes">
+              {p.visit_notes.map((n) => (
+                <li>{n}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {p.research_gaps.length > 0 && (
+          <section>
+            <h2>Still to confirm.</h2>
+            <ul class="bullet-notes">
+              {p.research_gaps.map((n) => (
+                <li>{n}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section>
+          <h2>All sources.</h2>
+          <p class="small">
+            Researched {dateLabel(p.checked_on)}. “Checked” is the research date, not a phone call
+            or an in-person verification.
+          </p>
+          <Sources ids={p.source_ids} />
+          <a
+            class="text-link"
+            href={`https://github.com/mldangelo/burrito/issues/new?title=${encodeURIComponent('Data correction: ' + shortName(p))}`}
+          >
+            Suggest a correction on GitHub ↗
+          </a>
+        </section>
+      </div>
+      <aside aria-label="Addresses and posted hours">
+        <p class="eyebrow">PLAN YOUR STOP</p>
+        <h2 style="font-size:29px">Where & when.</h2>
+        <p class="small">
+          Posted schedules in San Francisco time. Check the operator for holidays and changes.
+        </p>
+        <div class="branch-links">
+          {p.locations.length > 1 &&
+            p.locations.map((l) => <a href={'#' + l.id}>{l.address.street_address}</a>)}
+        </div>
+        {p.locations.map((l) => (
+          <section class="location-card" id={l.id}>
+            <p class="eyebrow">
+              {l.neighborhood}
+              {l.id === p.primary_location_id ? ' · MAIN ENTRY' : ''}
+            </p>
+            <h3>{l.name}</h3>
+            <address>
+              {l.address.street_address}
+              <br />
+              San Francisco, CA {l.address.postal_code}
+            </address>
+            {l.operating_status !== 'listed' && (
+              <p class="status-note">
+                {l.operating_status === 'closed'
+                  ? 'Former address · closed'
+                  : 'Announced · opening unconfirmed'}
+              </p>
+            )}
+            <a class="text-link" href={l.maps_url}>
+              Directions ↗
+            </a>
+            <h4>{scopeLabels[l.hours.scope]}</h4>
+            <span class="evidence">{label(l.hours.status)}</span>
+            <table class="hours">
+              <caption class="small" style="text-align:left;margin-top:8px">
+                Weekly schedule · America/Los_Angeles
+              </caption>
+              <tbody>
+                {Object.entries(l.hours.weekly).map(([day, windows]) => (
+                  <tr>
+                    <th scope="row">{day}</th>
+                    <td>{formatWindows(windows)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {[...l.hours.notes, ...l.notes].map((n) => (
+              <p class="small">{n}</p>
+            ))}
+            <details>
+              <summary>Address & hours sources</summary>
+              <Sources ids={[...new Set([...l.source_ids, ...l.hours.source_ids])]} />
+            </details>
+          </section>
+        ))}
+      </aside>
+    </div>
+  </div>
+</Base>

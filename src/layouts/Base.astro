@@ -1,0 +1,114 @@
+---
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/dm-sans';
+import '../styles/global.css';
+import { path, absolute } from '../lib/catalog';
+const {
+  title = 'A city worth unwrapping',
+  description = 'A sourced San Francisco burrito field guide. Explore Mission classics, California burritos, breakfast spots and neighborhood finds, with addresses, hours and review evidence.',
+  structured = [],
+  noindex = false,
+} = Astro.props;
+const canonical = noindex ? absolute('404.html') : new URL(Astro.url.pathname, Astro.site).href;
+const active = Astro.url.pathname;
+const rootData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': absolute() + '#website',
+  name: 'burrito — San Francisco Field Guide',
+  url: absolute(),
+  description,
+  inLanguage: 'en-US',
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title} · burrito SF</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow'} />
+    <meta name="theme-color" content="#f9f3e7" />
+    <link rel="icon" type="image/svg+xml" href={path('favicon.svg')} />
+    <link rel="sitemap" href={path('sitemap.xml')} />
+    <link
+      rel="alternate"
+      type="application/json"
+      title="Burrito catalog"
+      href={path('data/places.json')}
+    />
+    <link
+      rel="alternate"
+      type="text/markdown"
+      title="Agent reading index"
+      href={path('llms.txt')}
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="burrito · San Francisco Field Guide" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={absolute('images/social.png')} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="burrito: a city worth unwrapping. San Francisco field guide."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    {[rootData, ...structured].map((data) => (
+      <script type="application/ld+json" set:html={JSON.stringify(data).replace(/</g, '\u003c')} />
+    ))}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">
+      Skip to content
+    </a>
+    <header class="site-header wrap">
+      <a class="logo" href={path()} aria-label="burrito SF home">
+        burrito<span>SF</span>
+      </a>
+      <span class="edition">
+        SAN FRANCISCO
+        <br />
+        FIELD GUIDE
+      </span>
+      <nav aria-label="Main navigation">
+        {[
+          ['explore/', 'Explore'],
+          ['guides/', 'Guides'],
+          ['neighborhoods/', 'Neighborhoods'],
+          ['about/', 'About'],
+        ].map(([url, name]) => (
+          <a href={path(url)} aria-current={active.startsWith(path(url)) ? 'page' : undefined}>
+            {name}
+          </a>
+        ))}
+      </nav>
+    </header>
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <footer class="site-footer wrap">
+      <div>
+        <a class="logo" href={path()}>
+          burrito<span>SF</span>
+        </a>
+        <p>Good burritos. Receipts included.</p>
+      </div>
+      <div class="footer-links">
+        <a href={path('about/')}>How we choose</a>
+        <a href={path('data/')}>Data & sources</a>
+        <a href={path('llms.txt')}>For agents</a>
+        <a href="https://github.com/mldangelo/burrito">GitHub ↗</a>
+      </div>
+      <p class="fine-print">
+        A research-backed starting point for your own opinions. Hours are posted schedules, not live
+        availability.
+      </p>
+    </footer>
+  </body>
+</html>
