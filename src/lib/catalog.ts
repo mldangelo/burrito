@@ -61,6 +61,11 @@ export function clock(value: string) {
   const [h, m] = value.split(':').map(Number);
   return `${h % 12 || 12}${m ? ':' + String(m).padStart(2, '0') : ''}${h < 12 ? 'am' : 'pm'}`;
 }
+export const basisLabels: Record<string, string> = {
+  editorial: 'From editorial coverage',
+  menu_candidate: 'From the menu',
+  historical_review: 'From an older review',
+};
 export const scopeLabels: Record<string, string> = {
   restaurant: 'Restaurant hours',
   kitchen: 'Kitchen hours',
