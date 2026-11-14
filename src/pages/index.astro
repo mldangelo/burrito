@@ -12,6 +12,17 @@ const picks = [
   'la-corneta',
   'papalote',
 ].map((id) => places.find((p) => p.id === id));
+const withStyle = (style: string) => currentPlaces.filter((p) => p.styles.includes(style)).length;
+const tickerLines = [
+  `${currentPlaces.length} places to unwrap`,
+  `${neighborhoods.length} neighborhoods`,
+  'Foil on until the last bite',
+  `${withStyle('california-style')} with fries inside`,
+  'Mission → Ocean Beach → everywhere between',
+  `${withStyle('breakfast')} breakfast stops`,
+  'Napkins: take more than you think',
+  'Every pick has receipts',
+];
 ---
 
 <Base>
@@ -39,10 +50,13 @@ const picks = [
     <BurritoArt />
   </section>
   <div class="ticker">
-    <div class="wrap">
-      <span>{currentPlaces.length} CATALOG & HISTORY STOPS</span>
-      <span>MISSION → OCEAN BEACH → EVERYWHERE BETWEEN</span>
-    </div>
+    {[false, true].map((copy) => (
+      <ul class="ticker-track" aria-hidden={copy ? 'true' : undefined}>
+        {tickerLines.map((line) => (
+          <li>{line}</li>
+        ))}
+      </ul>
+    ))}
   </div>
   <section class="section wrap">
     <div class="section-heading">
