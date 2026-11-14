@@ -7,6 +7,7 @@ import {
   absolute,
   neighborhoods,
   categories,
+  categoryIds,
   evidence,
 } from '../../lib/catalog';
 import geocodes from '../../../data/geocodes.json';
@@ -16,7 +17,7 @@ const cards = currentPlaces.map((p) => ({
   primaryLocationId: p.primary_location_id,
   summary: p.summary,
   evidence: evidence(p),
-  styles: p.styles,
+  styles: categoryIds(p),
   search: [
     p.name,
     p.summary,
