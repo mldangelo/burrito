@@ -1,0 +1,47 @@
+---
+import { places, path, primary, shortName, order, evidence } from '../lib/catalog';
+const { label = 'Surprise me →' } = Astro.props;
+// Only active catalog entries: history stops and unconfirmed openings are not picks.
+const picks = places
+  .filter((p) => p.status === 'catalog')
+  .map((p) => ({
+    name: shortName(p),
+    meta: `${primary(p).neighborhood} · ${evidence(p)}`,
+    order: order(p),
+    url: path(`places/${p.id}/`),
+  }));
+---
+
+<div class="spin" data-spin>
+  <a class="text-link" href={path('explore/?surprise=1')} data-spin-fallback>
+    {label}
+  </a>
+  <button class="text-link spin-start" type="button" data-spin-start hidden>
+    {label}
+  </button>
+  <div class="spin-card" data-spin-card hidden>
+    <div aria-hidden="true">
+      <p class="eyebrow" data-spin-meta></p>
+      <p class="spin-name" data-spin-name></p>
+      <p class="spin-order" data-spin-order></p>
+    </div>
+    <div class="spin-actions">
+      <a class="button primary" href="#" data-spin-go>
+        Take me there →
+      </a>
+      <button class="quiet-button" type="button" data-spin-again>
+        Spin again
+      </button>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status" data-spin-status></p>
+  <script
+    type="application/json"
+    data-spin-picks
+    set:html={JSON.stringify(picks).replace(/</g, '\\u003c')}
+  />
+</div>
+
+<script>
+  import '../scripts/spin';
+</script>

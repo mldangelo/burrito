@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import BurritoArt from '../components/BurritoArt.astro';
 import PlaceCard from '../components/PlaceCard.astro';
 import GuideCards from '../components/GuideCards.astro';
+import SpinPick from '../components/SpinPick.astro';
 import { currentPlaces, places, path, categories, neighborhoods, slug } from '../lib/catalog';
 const picks = [
   'el-farolito',
@@ -42,9 +43,7 @@ const tickerLines = [
         <a class="button primary" href={path('explore/')}>
           Find your next burrito <span aria-hidden="true">↗</span>
         </a>
-        <a class="text-link" href={path('explore/?surprise=1')}>
-          Surprise me →
-        </a>
+        <SpinPick />
       </div>
     </div>
     <BurritoArt />

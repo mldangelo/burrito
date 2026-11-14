@@ -175,6 +175,20 @@ test('sitemap covers every indexable HTML page, metadata and structured data par
   assert.equal(urls.length, pages.length - 1);
   assert.ok(read('dist/llms.txt').includes(base + 'data/places.json'));
 });
+test('surprise picks use only active catalog entries and keep a no-JS link', () => {
+  const expected = catalog.places
+    .filter((p) => p.status === 'catalog')
+    .map((p) => `/burrito/places/${p.id}/`);
+  for (const file of ['index.html', '404.html']) {
+    const $ = html(file);
+    const picks = JSON.parse($('[data-spin-picks]').text());
+    assert.deepEqual(
+      picks.map((p) => p.url),
+      expected,
+    );
+    assert.equal($('[data-spin-fallback]').attr('href'), '/burrito/explore/?surprise=1');
+  }
+});
 test('search combines accent-insensitive tokens, neighborhood and style without mutation', () => {
   const input = [
     {
