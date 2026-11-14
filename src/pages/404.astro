@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SpinPick from '../components/SpinPick.astro';
 import { path } from '../lib/catalog';
 ---
 
@@ -12,10 +13,13 @@ import { path } from '../lib/catalog';
         <br />
         <em>got away.</em>
       </h1>
-      <p class="dek">The field guide is still full of good places to start.</p>
-      <a class="button primary" href={path('explore/')}>
-        Back to the guide →
-      </a>
+      <p class="dek">Plenty more where that came from. Spin the foil for a new one.</p>
+      <div class="hero-actions">
+        <a class="button primary" href={path('explore/')}>
+          Back to the guide →
+        </a>
+        <SpinPick label="Spin for another →" />
+      </div>
     </header>
   </div>
 </Base>

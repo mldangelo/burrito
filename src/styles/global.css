@@ -1755,3 +1755,71 @@ em {
     min-width: 48px;
   }
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.hero-actions {
+  flex-wrap: wrap;
+}
+.hero-actions .spin {
+  display: contents;
+}
+.spin-start {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--ink);
+}
+.spin-card {
+  flex-basis: 100%;
+  max-width: 460px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-top: 3px dashed var(--salsa);
+  padding: 20px 22px 18px;
+  box-shadow: 0 10px 30px -18px rgb(35 60 49 / 45%);
+}
+.spin-card .eyebrow {
+  color: var(--salsa);
+  margin-bottom: 6px;
+}
+.spin-name {
+  font: 550 34px/1.1 var(--serif);
+  letter-spacing: -0.8px;
+  margin: 0 0 8px;
+  min-height: 1.1em;
+}
+.spinning .spin-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hero > .burrito-art {
+  align-self: start;
+}
+.spin-order {
+  font-size: 13px;
+  font-weight: 650;
+  margin-bottom: 16px;
+}
+.spin-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .spin-card.landed {
+    animation: spin-land 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+}
+@keyframes spin-land {
+  from {
+    transform: scale(0.94) rotate(-1.5deg);
+  }
+}
