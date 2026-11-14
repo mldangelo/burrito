@@ -199,3 +199,103 @@ test('Mission chapter exposes every listed local branch once in its directory', 
   assert.ok(page('a[href="/burrito/map/?neighborhood=Mission&reviews=1"]').length > 0);
   assert.equal(load(readFileSync('dist/map/index.html', 'utf8'))('a[download]').length, 0);
 });
+
+test('California chapter preserves all listed style branches and highlights only their own critical coverage', () => {
+  const page = load(readFileSync('dist/guides/california-burritos/index.html', 'utf8'));
+  const expected = catalog.places
+    .filter((p) => p.status !== 'watchlist' && p.styles.includes('california-style'))
+    .flatMap((place) =>
+      place.locations
+        .filter((location) => location.operating_status === 'listed')
+        .map((location) => ({ place, location })),
+    );
+  const cards = page('.california-directory .california-stop');
+  assert.deepEqual(
+    cards
+      .toArray()
+      .map((el) => page(el).attr('data-location-id'))
+      .sort(),
+    expected.map((stop) => stop.location.id).sort(),
+  );
+  for (const { place, location } of expected) {
+    const card = page(`.california-directory [data-location-id="${location.id}"]`);
+    const reviews = criticalReviews(place, location.id);
+    assert.equal(card.hasClass('is-reviewed'), reviews.length > 0);
+    assert.deepEqual(
+      card
+        .find('.california-review')
+        .toArray()
+        .map((el) => page(el).attr('data-evidence')),
+      reviews.map((r) => r.evidence),
+    );
+    assert.deepEqual(
+      card
+        .find('.california-review li a')
+        .toArray()
+        .map((el) => page(el).attr('href')),
+      reviews.flatMap((r) =>
+        r.source_ids.map((id) => catalog.sources.find((source) => source.id === id).url),
+      ),
+    );
+    assert.ok(
+      card
+        .find('h4 a')
+        .attr('href')
+        .endsWith('#' + location.id),
+    );
+  }
+  for (const id of [
+    'el-burrito-express-1812-divisadero-st',
+    'rancho-grande-855-divisadero-st',
+    'suavecito-882-sutter-st',
+  ])
+    assert.equal(page(`.california-stop[data-location-id="${id}"]`).hasClass('is-reviewed'), false);
+  assert.ok(page('.california-review[data-evidence="historical_burrito_review"]').length);
+  assert.equal(page('[data-location-id="los-coyotes-3032-16th-st"]').length, 0);
+  const list = page('script[type="application/ld+json"]')
+    .toArray()
+    .map((el) => JSON.parse(page(el).text()))
+    .find((data) => data['@type'] === 'ItemList');
+  assert.deepEqual(
+    list.itemListElement.map((item) => item.url.split('#')[1]).sort(),
+    expected.map((stop) => stop.location.id).sort(),
+  );
+});
+
+test('California starting picks retain their review sources, dates, and unmapped branch directions', () => {
+  const page = load(readFileSync('dist/guides/california-burritos/index.html', 'utf8'));
+  const featured = page('.california-featured');
+  assert.equal(featured.length, 3);
+  for (const el of featured.toArray()) {
+    const id = page(el).attr('data-location-id');
+    const place = catalog.places.find((p) => p.locations.some((l) => l.id === id));
+    const urls = criticalReviews(place, id).flatMap((r) =>
+      r.source_ids.map((sourceId) => catalog.sources.find((s) => s.id === sourceId).url),
+    );
+    for (const link of page(el).find('.california-pick-sources a').toArray())
+      assert.ok(urls.includes(page(link).attr('href')));
+  }
+  assert.equal(
+    page('.california-featured[data-location-id="senor-sisig-1-ferry-building-suite-41"]').length,
+    1,
+  );
+  assert.equal(
+    page(
+      '.california-featured[data-location-id="senor-sisig-1-ferry-building-suite-41"] .california-unmapped',
+    ).length,
+    1,
+  );
+  assert.equal(page('.california-featured[data-location-id="garaje-475-3rd-st"] time').length, 0);
+  assert.ok(
+    page('.california-featured[data-location-id="garaje-475-3rd-st"]')
+      .text()
+      .includes('Publication date not listed'),
+  );
+  assert.equal(
+    page(
+      '.california-featured[data-location-id="senor-sisig-1-ferry-building-suite-41"] time',
+    ).attr('datetime'),
+    '2023-03-13',
+  );
+  assert.ok(page('a[href="/burrito/map/?style=california-style&reviews=1"]').length >= 2);
+});

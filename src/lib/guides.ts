@@ -5,7 +5,7 @@ export const guides = [
     label: 'California burritos',
     eyebrow: 'THE FRIES-INSIDE FILE',
     description:
-      'Where to explore California-style burritos in San Francisco, from Leo’s al pastor to Garaje’s pressed zapato.',
+      'A California-style burrito field guide to San Francisco, with reviewed orders, highlighted critical coverage, a complete branch directory and a filtered map.',
     intro:
       'The California burrito takes its potatoes on the inside. San Francisco’s versions range from taco-truck classics to pressed tortillas and Filipino-Mexican interpretations. Start with the explicitly reviewed orders, then branch out into menu-confirmed neighborhood options.',
     ids: [
@@ -19,6 +19,9 @@ export const guides = [
       'suavecito',
       'tacos-el-tucan',
       'vallarta',
+      'castillito-mission',
+      'saucy-asian',
+      'cazadores',
     ],
     notes: {
       leos: 'An al pastor California burrito is the specific critical pick here. The truck’s Ocean Beach setting makes it a natural west-side outing.',

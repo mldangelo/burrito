@@ -1,0 +1,277 @@
+---
+import GuideMap from './GuideMap.astro';
+import { catalog, path, shortName, sourceMap, dateLabel } from '../lib/catalog';
+import { californiaPlaces, californiaStops, californiaStarts } from '../lib/california';
+import { reviewKinds } from '../lib/map-filters.mjs';
+import { mapLocations } from '../lib/map.mjs';
+import geocodes from '../../data/geocodes.json';
+const reviewed = californiaStops.filter((stop) => stop.reviews.length);
+const coordinates = mapLocations(catalog, geocodes).filter((stop) =>
+  californiaStops.some((branch) => branch.location.id === stop.id),
+);
+const mapURL = path('map/?style=california-style&reviews=1');
+const branchURL = (stop) => path(`places/${stop.place.id}/#${stop.location.id}`);
+const sourceDate = (source) =>
+  source.published_on ? dateLabel(source.published_on) : 'Publication date not listed';
+const sections = [
+  {
+    id: 'california-reviewed',
+    title: 'With critical coverage.',
+    note: 'Gold marks reviews of this branch. The labels and notes show whether the coverage concerns burritos, the restaurant or tacos, or an older visit.',
+    stops: reviewed,
+  },
+  {
+    id: 'california-more',
+    title: 'More places to explore.',
+    note: 'Menu finds and additional branches. These locations do not have critical coverage recorded in the catalog.',
+    stops: californiaStops.filter((stop) => !stop.reviews.length),
+  },
+];
+---
+
+<div class="wrap mission-guide california-guide">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href={path('guides/')}>Field notes</a>
+    <span>/</span>
+    <span>California-style</span>
+  </nav>
+  <header class="mission-hero">
+    <div class="mission-hero-copy">
+      <p class="eyebrow">THE FRIES-INSIDE FILE / SAN FRANCISCO</p>
+      <h1>
+        California-style.
+        <br />
+        <em>Fries belong inside.</em>
+      </h1>
+      <p class="dek">
+        Al pastor by the ocean. A pressed zapato in SoMa. California Sisig on the waterfront. Follow
+        the fries across the city.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href={mapURL}>
+          Explore the California-style map ↗
+        </a>
+        <a class="text-link" href="#california-stops">
+          Every stop ↓
+        </a>
+      </div>
+      <dl class="mission-stats">
+        <div>
+          <dt>{californiaStops.length}</dt>
+          <dd>listed locations</dd>
+        </div>
+        <div>
+          <dt>{reviewed.length}</dt>
+          <dd>with critical coverage</dd>
+        </div>
+        <div>
+          <dt>{coordinates.length}</dt>
+          <dd>on the map</dd>
+        </div>
+      </dl>
+    </div>
+    <GuideMap
+      locations={coordinates}
+      reviewedIds={reviewed.map((stop) => stop.location.id)}
+      href={mapURL}
+      title="CALIFORNIA-STYLE / AROUND SF"
+      label="Open the California-style burrito map with critically reviewed branches highlighted"
+    />
+  </header>
+
+  <section class="mission-section" aria-labelledby="california-start">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">START WITH A REVIEWED ORDER</p>
+        <h2 id="california-start">Three takes on fries inside.</h2>
+      </div>
+      <span class="small">Starting points, in no ranked order.</span>
+    </div>
+    <div class="mission-picks">
+      {californiaStarts.map(({ stop, label, note, sourceIds }) => (
+        <article
+          class="mission-pick california-featured is-reviewed"
+          data-location-id={stop.location.id}
+        >
+          <p class="eyebrow">{label}</p>
+          <h3>
+            <a href={branchURL(stop)}>{shortName(stop.place)} ↗</a>
+          </h3>
+          <p class="mission-address">
+            {stop.location.address.street_address} · {stop.location.neighborhood}
+          </p>
+          <span class="california-review-badge">★ California order reviewed</span>
+          {!geocodes.locations[stop.location.id] && (
+            <p class="california-unmapped">Not on the map yet. Directions are available below.</p>
+          )}
+          <p class="california-order">{stop.order?.name}</p>
+          <p>{note}</p>
+          <ul class="california-pick-sources">
+            {sourceIds.map((id) => {
+              const source = sourceMap.get(id)!;
+              return (
+                <li>
+                  <a href={source.url}>{source.title}</a>
+                  <span>
+                    {source.published_on ? (
+                      <time datetime={source.published_on}>{sourceDate(source)}</time>
+                    ) : (
+                      sourceDate(source)
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div class="mission-pick-footer">
+            <a class="text-link" href={branchURL(stop)}>
+              Order, hours & details →
+            </a>
+            <a class="text-link" href={stop.location.maps_url}>
+              Directions ↗
+            </a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section
+    class="mission-section"
+    id="california-stops"
+    aria-labelledby="california-directory-title"
+  >
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">THE WHOLE FRIES FILE</p>
+        <h2 id="california-directory-title">Find your next California.</h2>
+      </div>
+      <span class="small">
+        {californiaPlaces.length} restaurants · {californiaStops.length} listed locations
+      </span>
+    </div>
+    <p class="california-directory-intro">
+      Style tags describe the restaurant; menus can vary by branch. A burrito review does not always
+      cover its California version. Open the review notes for the exact order and source.
+    </p>
+    <nav class="california-jump-links" aria-label="California guide sections">
+      <a href="#california-reviewed">★ Critical coverage ({reviewed.length})</a>
+      <a href="#california-more">More to explore ({californiaStops.length - reviewed.length})</a>
+      <a href={mapURL}>View on the map ↗</a>
+    </nav>
+    {sections.map((section) => (
+      <section
+        class="california-directory-section"
+        id={section.id}
+        aria-labelledby={`${section.id}-heading`}
+      >
+        <h3 id={`${section.id}-heading`}>{section.title}</h3>
+        <p class="small">{section.note}</p>
+        <div class="california-directory">
+          {section.stops.map((stop) => (
+            <article
+              class:list={['california-stop', { 'is-reviewed': stop.reviews.length > 0 }]}
+              data-location-id={stop.location.id}
+            >
+              <div class="california-stop-heading">
+                <p class="eyebrow">{stop.location.neighborhood}</p>
+                <h4>
+                  <a href={branchURL(stop)}>{shortName(stop.place)} ↗</a>
+                </h4>
+                <p class="mission-address">{stop.location.address.street_address}</p>
+                {!geocodes.locations[stop.location.id] && (
+                  <p class="california-unmapped">Directions available · not on the map</p>
+                )}
+              </div>
+              <p class="california-order">
+                {stop.order?.name ?? 'Check this branch’s menu for its California-style options.'}
+              </p>
+              {stop.reviews.length ? (
+                <>
+                  <span class="california-review-badge">
+                    ★{' '}
+                    {[...new Set(stop.reviews.map((review) => reviewKinds[review.evidence]))].join(
+                      ' · ',
+                    )}
+                  </span>
+                  <details class="california-coverage">
+                    <summary>Review notes & sources</summary>
+                    {stop.reviews.map((review) => (
+                      <div class="california-review" data-evidence={review.evidence}>
+                        <p>{review.summary}</p>
+                        <ul>
+                          {review.source_ids.map((id) => {
+                            const source = sourceMap.get(id)!;
+                            return (
+                              <li>
+                                <a href={source.url}>{source.title}</a>
+                                <span>
+                                  {source.published_on ? (
+                                    <time datetime={source.published_on}>{sourceDate(source)}</time>
+                                  ) : (
+                                    sourceDate(source)
+                                  )}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </details>
+                </>
+              ) : (
+                <p class="california-no-review">
+                  {stop.order
+                    ? 'Menu find · no critical review recorded'
+                    : 'Additional branch · menu and review coverage unconfirmed here'}
+                </p>
+              )}
+              <div class="california-stop-links">
+                <a class="text-link" href={branchURL(stop)}>
+                  Hours & details →
+                </a>
+                <a class="text-link" href={stop.location.maps_url}>
+                  Directions ↗
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
+  </section>
+
+  <aside class="mission-reading california-reading">
+    <div>
+      <p class="eyebrow">KEEP EXPLORING</p>
+      <h2>
+        Follow the fries.
+        <br />
+        <em>Read the receipts.</em>
+      </h2>
+      <a class="button primary" href={mapURL}>
+        Open the filtered map ↗
+      </a>
+    </div>
+    <div>
+      <p>
+        Gold highlights branch-specific critical coverage, including restaurant/taco and archive
+        reviews. Menu listings and opening announcements do not receive that highlight.
+      </p>
+      <p>
+        {californiaStops.length - coordinates.length} listed locations lack accepted coordinates:
+        the Ferry Building and Thrive City branches of Señor Sisig. Their review notes and
+        directions remain in the guide above.
+      </p>
+      <p>
+        For a neighborhood-by-neighborhood comparison, start with{' '}
+        <a href={path('neighborhoods/mission/')}>the Mission field guide</a>.
+      </p>
+      <p class="small">
+        Geography: <a href="https://data.sf.gov/d/gfpk-269f">DataSF</a>. Address points: U.S.
+        Census, approximate rather than verified entrances. Research snapshot: {catalog.updated_on}.
+      </p>
+    </div>
+  </aside>
+</div>

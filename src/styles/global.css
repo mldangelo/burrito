@@ -2387,3 +2387,179 @@ em {
   border-color: var(--salsa);
   box-shadow: 0 0 0 1px var(--salsa);
 }
+
+.california-guide .mission-hero h1 {
+  font-size: clamp(40px, 4.5vw, 62px);
+}
+.california-map-card {
+  background: #63451c;
+  transform: rotate(-1deg);
+}
+.california-map-card svg {
+  background: #deebe6;
+}
+.california-map-card .guide-map-reviewed circle {
+  fill: #efc86e;
+  stroke: #745018;
+}
+.california-map-card .guide-map-reviewed text {
+  fill: #4c320d;
+}
+.california-featured.is-reviewed {
+  background: #fff7e3;
+  border-top: 3px solid #ad7a20;
+}
+.california-review-badge {
+  display: inline-block;
+  align-self: flex-start;
+  color: #6d430d;
+  background: #f3dfaa;
+  border: 1px solid #dec382;
+  border-radius: 3px;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.california-order {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0;
+}
+.california-pick-sources,
+.california-coverage ul {
+  padding: 0;
+  margin: 0 0 16px;
+  list-style: none;
+}
+.california-pick-sources li,
+.california-coverage li {
+  margin: 10px 0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.california-pick-sources span,
+.california-coverage li span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.california-directory-intro {
+  max-width: 760px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.california-jump-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 25px;
+  margin: 20px 0 35px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.california-jump-links a {
+  padding-block: 10px;
+}
+.california-directory-section {
+  margin-top: 35px;
+  scroll-margin-top: 24px;
+}
+.california-directory-section > h3 {
+  font-size: 31px;
+  margin-bottom: 12px;
+}
+.california-directory-section > .small {
+  max-width: 730px;
+  margin-bottom: 24px;
+}
+.california-directory {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.california-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 26px;
+  border: 1px solid var(--line);
+  background: #fffaf0;
+}
+.california-stop.is-reviewed {
+  border-left: 3px solid #ad7a20;
+  background: #fff7e3;
+  padding-left: 24px;
+}
+.california-stop-heading .eyebrow {
+  font-size: 9px;
+  margin-bottom: 10px;
+}
+.california-stop h4 {
+  font: 500 26px/1.15 var(--serif);
+  margin: 0 0 10px;
+}
+.california-stop h4 a {
+  text-decoration: none;
+}
+.california-stop h4 a:hover {
+  text-decoration: underline;
+}
+.california-stop .mission-address {
+  margin-bottom: 0;
+}
+.california-no-review {
+  font-size: 11px;
+  color: var(--muted);
+}
+.california-stop-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: auto;
+  padding-top: 20px;
+  font-size: 12px;
+}
+.california-coverage {
+  width: 100%;
+  margin-top: 14px;
+  font-size: 12px;
+}
+.california-coverage summary {
+  cursor: pointer;
+  padding: 10px 0;
+  text-decoration: underline;
+}
+.california-review {
+  padding-top: 10px;
+  border-top: 1px solid #decfa6;
+}
+.california-review p {
+  margin-bottom: 12px;
+}
+.california-reading .button {
+  margin-top: 12px;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .california-map-card {
+    transform: none;
+  }
+  .california-directory {
+    grid-template-columns: 1fr;
+  }
+  .california-jump-links {
+    gap: 2px 20px;
+  }
+  .california-stop {
+    padding: 22px;
+  }
+  .california-stop.is-reviewed {
+    padding-left: 20px;
+  }
+}
+.california-unmapped {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 9px 0;
+}

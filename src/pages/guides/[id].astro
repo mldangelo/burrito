@@ -1,4 +1,6 @@
 ---
+import CaliforniaGuide from '../../components/CaliforniaGuide.astro';
+import { californiaStops } from '../../lib/california';
 import Base from '../../layouts/Base.astro';
 import { guides } from '../../lib/guides';
 import { places, path, absolute, shortName, primary, order, evidence } from '../../lib/catalog';
@@ -7,65 +9,75 @@ export function getStaticPaths() {
 }
 const { guide: g } = Astro.props;
 const picks = g.ids.map((id) => places.find((p) => p.id === id)!);
+const isCalifornia = g.id === 'california-burritos';
+const entries = isCalifornia
+  ? californiaStops.map((stop) => ({
+      name: shortName(stop.place),
+      url: absolute(`places/${stop.place.id}/#${stop.location.id}`),
+    }))
+  : picks.map((place) => ({ name: place.name, url: absolute(`places/${place.id}/`) }));
 const structured = [
   {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: g.label,
     description: g.description,
-    itemListElement: picks.map((p, i) => ({
+    itemListElement: entries.map((entry, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      name: p.name,
-      url: absolute(`places/${p.id}/`),
+      ...entry,
     })),
   },
 ];
 ---
 
 <Base title={g.label + ' in San Francisco'} description={g.description} structured={structured}>
-  <div class="wrap">
-    <header class="page-heading">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href={path('guides/')}>Field notes</a>
-        <span>/</span>
-        <span>{g.label}</span>
-      </nav>
-      <p class="eyebrow">{g.eyebrow}</p>
-      <h1>{g.title}</h1>
-    </header>
-    <div class="page-body">
-      <p class="guide-intro">{g.intro}</p>
-      <p class="small">
-        A collection, not a ranking. Read each entry for its exact branch, evidence and current
-        posted schedule.
-      </p>
-      {picks.map((p, i) => (
-        <article class="guide-entry">
-          <span class="number" aria-hidden="true">
-            {String(i + 1).padStart(2, '0')}
-          </span>
-          <div>
-            <p class="eyebrow">
-              {primary(p).neighborhood} · {evidence(p)}
-            </p>
-            <h2>
-              <a href={path(`places/${p.id}/`)}>{shortName(p)} ↗</a>
-            </h2>
-            <p>
-              <strong>{order(p)}</strong>
-            </p>
-            <p>{g.notes[p.id] ?? p.summary}</p>
-            <p class="small">Main entry: {primary(p).address.street_address}</p>
-            <a class="text-link" href={path(`places/${p.id}/`)}>
-              Orders, hours & sources →
-            </a>
-          </div>
-        </article>
-      ))}
-      <a class="button" href={path('explore/')}>
-        Explore the whole guide ↗
-      </a>
+  {isCalifornia ? (
+    <CaliforniaGuide />
+  ) : (
+    <div class="wrap">
+      <header class="page-heading">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href={path('guides/')}>Field notes</a>
+          <span>/</span>
+          <span>{g.label}</span>
+        </nav>
+        <p class="eyebrow">{g.eyebrow}</p>
+        <h1>{g.title}</h1>
+      </header>
+      <div class="page-body">
+        <p class="guide-intro">{g.intro}</p>
+        <p class="small">
+          A collection, not a ranking. Read each entry for its exact branch, evidence and current
+          posted schedule.
+        </p>
+        {picks.map((p, i) => (
+          <article class="guide-entry">
+            <span class="number" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <div>
+              <p class="eyebrow">
+                {primary(p).neighborhood} · {evidence(p)}
+              </p>
+              <h2>
+                <a href={path(`places/${p.id}/`)}>{shortName(p)} ↗</a>
+              </h2>
+              <p>
+                <strong>{order(p)}</strong>
+              </p>
+              <p>{g.notes[p.id] ?? p.summary}</p>
+              <p class="small">Main entry: {primary(p).address.street_address}</p>
+              <a class="text-link" href={path(`places/${p.id}/`)}>
+                Orders, hours & sources →
+              </a>
+            </div>
+          </article>
+        ))}
+        <a class="button" href={path('explore/')}>
+          Explore the whole guide ↗
+        </a>
+      </div>
     </div>
-  </div>
+  )}
 </Base>

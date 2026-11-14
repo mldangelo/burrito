@@ -30,7 +30,8 @@ Every place has /places/{id}/ (HTML), /data/places/{id}.json (record plus source
 ## Curated guides
 ${guides.map((g) => `- [${g.label}](${absolute(`guides/${g.id}/`)}): ${g.description}`).join('\n')}
 
-## Neighborhood field guide
+## Field guide chapters
+- [California-style](${absolute('guides/california-burritos/')}): a complete branch directory with highlighted critical coverage, reviewed California orders, original source links and publication dates. Highlights also include restaurant/taco and archive coverage, with explicit labels.
 - [The Mission](${absolute('neighborhoods/mission/')}): branch-specific starting picks, a street-by-street directory, review labels, and an exact-neighborhood map view.
 - [Interactive map](${absolute('map/')}): California-style and Mission-style filters, critical-coverage highlights, branch-scoped sources. Styles are restaurant-level catalog tags; menus may vary by branch.
 
