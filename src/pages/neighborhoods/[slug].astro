@@ -70,8 +70,8 @@ const structured = [
       </header>
       <div class="page-body">
         <div class="place-grid">
-          {picks.map((p, i) => (
-            <PlaceCard place={p} neighborhood={name} number={i + 1} />
+          {picks.map((p) => (
+            <PlaceCard place={p} neighborhood={name} />
           ))}
         </div>
         <p class="map-caption">

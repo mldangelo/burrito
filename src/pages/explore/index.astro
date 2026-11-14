@@ -102,7 +102,7 @@ const structured = [
           <div class="chips" role="group" aria-label="Burrito style">
             {categories.map((c) => (
               <button class="chip" type="button" data-style={c.id} aria-pressed={c.id === 'all'}>
-                {c.name}
+                <span aria-hidden="true">{c.icon}</span> {c.name}
               </button>
             ))}
           </div>
@@ -135,8 +135,8 @@ const structured = [
         </div>
       </div>
       <div id="list-view" class="place-grid">
-        {currentPlaces.map((p, i) => (
-          <PlaceCard place={p} number={i + 1} />
+        {currentPlaces.map((p) => (
+          <PlaceCard place={p} />
         ))}
       </div>
       <section id="map-view" hidden aria-label="Burrito map">
