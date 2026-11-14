@@ -1,22 +1,28 @@
 ---
 import { sourceMap, dateLabel, label } from '../lib/catalog';
-const { ids } = Astro.props;
+// `compact` lists links inline; the full list adds kind and publication/research dates.
+const { ids, compact = false } = Astro.props;
+const list = ids.map((id: string) => sourceMap.get(id)).filter(Boolean);
 ---
 
-<ul class="source-links">
-  {ids.map((id) => {
-    const s = sourceMap.get(id);
-    return (
-      s && (
-        <li>
-          <a href={s.url}>{s.title} ↗</a>
-          <span>
-            {label(s.kind)}
-            {s.published_on ? ` · Published ${dateLabel(s.published_on)}` : ''} · Checked{' '}
-            {dateLabel(s.checked_on)}
-          </span>
-        </li>
-      )
-    );
-  })}
-</ul>
+{compact ? (
+  <p class="source-inline">
+    <span>Sources:</span>
+    {list.map((s) => (
+      <a href={s.url}>{s.title} ↗</a>
+    ))}
+  </p>
+) : (
+  <ul class="source-links">
+    {list.map((s) => (
+      <li>
+        <a href={s.url}>{s.title} ↗</a>
+        <span>
+          {label(s.kind)}
+          {s.published_on ? ` · Published ${dateLabel(s.published_on)}` : ''} · Checked{' '}
+          {dateLabel(s.checked_on)}
+        </span>
+      </li>
+    ))}
+  </ul>
+)}
