@@ -10,14 +10,16 @@
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "test": "node --test",
-    "check": "npm run validate && npm run check:index && npm run format:check && npm run build && npm test",
+    "check": "npm run validate && npm run check:index && npm run check:map && npm run format:check && npm run build && npm test",
     "dev": "astro dev --host 127.0.0.1",
-    "build": "astro build",
+    "build": "node scripts/build-map.mjs && astro build",
     "preview": "astro preview --host 127.0.0.1",
     "build:index": "node scripts/build-index.mjs",
     "check:index": "node scripts/build-index.mjs --check",
-    "format": "prettier --write src test/web.test.mjs astro.config.mjs tsconfig.json",
-    "format:check": "prettier --check src test/web.test.mjs astro.config.mjs tsconfig.json"
+    "format": "prettier --write src test/web.test.mjs astro.config.mjs tsconfig.json test/map.test.mjs scripts/build-map.mjs",
+    "format:check": "prettier --check src test/web.test.mjs astro.config.mjs tsconfig.json test/map.test.mjs scripts/build-map.mjs",
+    "build:map": "node scripts/build-map.mjs",
+    "check:map": "node scripts/build-map.mjs --check"
   },
   "devDependencies": {
     "ajv": "8.20.0",

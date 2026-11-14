@@ -119,3 +119,9 @@ A project-scoped `/burrito/robots.txt` would not control crawlers for the host, 
 ### Checks
 
 `npm run check` validates the catalog, confirms the generated Markdown index, builds the guide, and runs the test suite. The web checks cover static discovery, every branch and cited source, JSON exports and schemas, map-record references, structured-data scope, sitemap coverage, base paths and internal links/fragments. Browser QA should also cover search, combined filters, empty/reset behavior, random selection, map/list switching, keyboard use and narrow mobile layouts.
+
+### Illustrated SVG map
+
+The [field map](https://mldangelo.github.io/burrito/map/) uses sourced DataSF neighborhood polygons and the catalog’s approximate Census address matches. The [standalone SVG](https://mldangelo.github.io/burrito/maps/sf-burrito-map.svg) is self-contained, downloadable, printable, and linked to branch pages or complete cluster lists. Numbered markers count nearby branch locations. The web page includes every mapped stop and the unmatched locations as ordinary HTML links.
+
+Run `npm run build:map` after changing catalog data, coordinates, geography or the SVG renderer. `npm run check` verifies the generated map is current. Geography provenance and projection/grouping details are in [data/map/README.md](data/map/README.md). The existing street map remains available for zooming and street-level context.

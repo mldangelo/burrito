@@ -22,3 +22,5 @@
 - Do not emit ordering windows, unknown or conflicting schedules as Restaurant opening hours in JSON-LD.
 - Coordinates live separately in `data/geocodes.json`; keep Census provenance and approximate-position notices. See `data/GEOCODING.md`.
 - Verify desktop and narrow mobile layouts and the complete primary flow. Stub OSM tiles in automated map checks; do not automate bulk map panning.
+
+- Regenerate the illustrated SVG with `npm run build:map` after catalog, coordinate or map-renderer changes. Preserve DataSF provenance in `data/map/README.md`; numbers on map markers are location counts, never rankings.

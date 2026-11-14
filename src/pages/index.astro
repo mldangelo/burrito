@@ -82,6 +82,36 @@ const picks = [
     </div>
     <GuideCards limit={3} />
   </section>
+  <section class="section wrap section-rule map-preview">
+    <div>
+      <p class="eyebrow">A LITTLE GEOGRAPHY. A LOT OF GOOD LUNCHES.</p>
+      <h2>
+        The city,
+        <br />
+        <em>by the burrito.</em>
+      </h2>
+      <p>
+        From the Mission to the ocean, follow the dots to your next stop. Our illustrated field map
+        puts the whole collection on paper.
+      </p>
+      <a class="button primary" href={path('map/')}>
+        Unfold the map ↗
+      </a>
+    </div>
+    <a
+      class="map-preview-image"
+      href={path('map/')}
+      aria-label="Explore the illustrated San Francisco burrito map"
+    >
+      <img
+        src={path('maps/sf-burrito-map.svg')}
+        alt="Illustrated San Francisco burrito map with neighborhood outlines, parks, and red location markers"
+        width="1100"
+        height="1090"
+        loading="lazy"
+      />
+    </a>
+  </section>
   <section class="neighborhood-band">
     <div class="wrap neighborhood-layout">
       <div>

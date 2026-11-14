@@ -3,6 +3,7 @@ import { guides } from '../lib/guides';
 export const routes = [
   '',
   'explore/',
+  'map/',
   'guides/',
   'neighborhoods/',
   'about/',
