@@ -16,6 +16,7 @@ import {
   dateLabel,
   formatWindows,
   scopeLabels,
+  stickerFor,
 } from '../../lib/catalog';
 export function getStaticPaths() {
   return places.map((place) => ({ params: { id: place.id }, props: { place } }));
@@ -58,7 +59,9 @@ const structured = [
         <p class="dek">{p.summary}</p>
         <div class="tag-row">
           {p.styles.map((s) => (
-            <span class="tag">{label(s)}</span>
+            <span class="tag sticker" style={stickerFor(s) && `--tint:${stickerFor(s)!.tint}`}>
+              {stickerFor(s) && <span aria-hidden="true">{stickerFor(s)!.icon}</span>} {label(s)}
+            </span>
           ))}
         </div>
         <div class="export-links">

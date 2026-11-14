@@ -69,17 +69,14 @@ const tickerLines = [
     </div>
     <div class="chips">
       {categories.map((c) => (
-        <a
-          class:list={['chip', { selected: c.id === 'all' }]}
-          href={path('explore/') + (c.id === 'all' ? '' : `?style=${c.id}`)}
-        >
-          {c.name}
+        <a class="chip" href={path('explore/') + (c.id === 'all' ? '' : `?style=${c.id}`)}>
+          <span aria-hidden="true">{c.icon}</span> {c.name}
         </a>
       ))}
     </div>
     <div class="place-grid">
-      {picks.map((p, i) => (
-        <PlaceCard place={p} number={i + 1} />
+      {picks.map((p) => (
+        <PlaceCard place={p} />
       ))}
     </div>
   </section>

@@ -1,6 +1,6 @@
 ---
-import { path, primary, shortName, order, evidence, label } from '../lib/catalog';
-const { place: p, number, neighborhood } = Astro.props;
+import { path, primary, shortName, evidence, stickersFor } from '../lib/catalog';
+const { place: p, neighborhood } = Astro.props;
 const loc = neighborhood
   ? p.locations.find((l) => l.neighborhood === neighborhood && l.operating_status === 'listed')
   : primary(p);
@@ -9,8 +9,14 @@ const linkedOrder = p.standout_items.find((i) => i.location_ids.includes(loc.id)
 
 <article class="place-card" data-place-id={p.id}>
   <div class="card-meta">
-    <span>{loc.neighborhood}</span>
-    {number && <span class="card-number">{String(number).padStart(2, '0')}</span>}
+    <span class="card-hood">{loc.neighborhood}</span>
+    <span class="stickers">
+      {stickersFor(p).map((s) => (
+        <span class="sticker" style={`--tint:${s.tint}`}>
+          <span aria-hidden="true">{s.icon}</span> {s.name}
+        </span>
+      ))}
+    </span>
   </div>
   <h3>
     <a href={path(`places/${p.id}/`)}>

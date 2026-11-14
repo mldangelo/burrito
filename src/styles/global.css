@@ -368,8 +368,36 @@ em {
   color: var(--muted);
   font-weight: 600;
 }
-.card-number {
-  color: var(--salsa);
+.card-meta .stickers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 99px;
+  background: var(--tint, #ece6d6);
+  color: var(--ink);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  rotate: -2deg;
+}
+.sticker + .sticker {
+  rotate: 1.5deg;
+}
+.sticker > span {
+  font-size: 12px;
+  line-height: 1;
+}
+.card-meta {
+  align-items: center;
 }
 .place-card h3 a {
   text-decoration: none;
@@ -688,6 +716,12 @@ em {
 .tag {
   border: 1px solid var(--line);
   padding: 3px 8px;
+}
+.tag.sticker {
+  border: 0;
+  font-size: 11px;
+  text-transform: capitalize;
+  rotate: 0deg;
 }
 .place-layout {
   display: grid;

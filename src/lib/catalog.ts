@@ -80,17 +80,35 @@ export const inNeighborhood = (name: string) =>
   );
 // A browsing category can cover several catalog style tags.
 export const categories = [
-  { id: 'all', name: 'A little of everything', styles: [] },
-  { id: 'classic-mission', name: 'Mission classics', styles: ['classic-mission'] },
-  { id: 'california-style', name: 'Fries inside', styles: ['california-style'] },
-  { id: 'breakfast', name: 'Breakfast', styles: ['breakfast'] },
-  { id: 'seafood', name: 'Seafood', styles: ['seafood'] },
+  { id: 'all', name: 'A little of everything', icon: '✨', styles: [] },
+  { id: 'classic-mission', name: 'Mission classics', icon: '🌯', styles: ['classic-mission'] },
+  { id: 'california-style', name: 'Fries inside', icon: '🍟', styles: ['california-style'] },
+  { id: 'breakfast', name: 'Breakfast', icon: '🍳', styles: ['breakfast'] },
+  { id: 'seafood', name: 'Seafood', icon: '🐟', styles: ['seafood'] },
   {
     id: 'vegetarian',
     name: 'Meat alternatives',
+    icon: '🌱',
     styles: ['vegetarian-standout', 'vegetarian-options'],
   },
 ];
+// Stickers decorate a place's own style tags, most distinctive first.
+export const stickers = [
+  { style: 'california-style', icon: '🍟', name: 'Fries inside', tint: '#f2d9a2' },
+  { style: 'breakfast', icon: '🍳', name: 'Breakfast', tint: '#f3e3a3' },
+  { style: 'seafood', icon: '🐟', name: 'Seafood', tint: '#d3e3e1' },
+  { style: 'vegetarian-standout', icon: '🌱', name: 'Meat alternative', tint: '#dbe5c6' },
+  { style: 'vegetarian-options', icon: '🌱', name: 'Meat alternative', tint: '#dbe5c6' },
+  { style: 'birria', icon: '🍲', name: 'Birria', tint: '#efcfc2' },
+  { style: 'duck', icon: '🦆', name: 'Duck', tint: '#e2dccb' },
+  { style: 'late-night', icon: '🌙', name: 'Late night', tint: '#dcdde9' },
+  { style: 'food-truck', icon: '🚚', name: 'Truck', tint: '#e6dccd' },
+  { style: 'history', icon: '📜', name: 'History', tint: '#e8ddc6' },
+  { style: 'classic-mission', icon: '🌯', name: 'Mission classic', tint: '#ecd9c4' },
+];
+export const stickerFor = (style: string) => stickers.find((s) => s.style === style);
+export const stickersFor = (p: Place, max = 2) =>
+  stickers.filter((s) => p.styles.includes(s.style)).slice(0, max);
 export const categoryIds = (p: Place) =>
   categories.filter((c) => c.styles.some((s) => p.styles.includes(s))).map((c) => c.id);
 export function branchEntities(p: Place) {

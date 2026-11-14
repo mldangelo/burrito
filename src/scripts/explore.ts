@@ -42,7 +42,7 @@ function update(write = true) {
       ? p.locations.find((l) => l.neighborhood === neighborhood.value)
       : p.locations.find((l) => l.id === p.primaryLocationId);
     const isPrimary = branch.id === p.primaryLocationId;
-    c.querySelector('.card-meta span')!.textContent = branch.neighborhood;
+    c.querySelector('.card-hood')!.textContent = branch.neighborhood;
     c.querySelector('.card-order')!.textContent = branch.order;
     c.querySelector('.card-summary')!.textContent = isPrimary
       ? p.summary
