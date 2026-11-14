@@ -218,3 +218,17 @@ test('search combines accent-insensitive tokens, neighborhood and style without 
   assert.equal(filterPlaces(input, {}).length, 2);
   assert.equal(input.length, 2);
 });
+test('every browsing category chip finds at least one place', () => {
+  const $ = html('explore/index.html');
+  const data = JSON.parse($('#explorer-data').text());
+  for (const e of $('[data-style]').toArray()) {
+    const style = $(e).attr('data-style');
+    assert.ok(filterPlaces(data, { style }).length > 0, `${style} matches nothing`);
+  }
+  assert.deepEqual(
+    filterPlaces(data, { style: 'vegetarian' }).map((p) => p.id),
+    catalog.places
+      .filter((p) => p.status !== 'watchlist' && p.styles.some((s) => s.startsWith('vegetarian')))
+      .map((p) => p.id),
+  );
+});

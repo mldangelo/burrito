@@ -78,14 +78,21 @@ export const inNeighborhood = (name: string) =>
   currentPlaces.filter((p) =>
     p.locations.some((l) => l.operating_status === 'listed' && l.neighborhood === name),
   );
+// A browsing category can cover several catalog style tags.
 export const categories = [
-  { id: 'all', name: 'A little of everything' },
-  { id: 'classic-mission', name: 'Mission classics' },
-  { id: 'california-style', name: 'Fries inside' },
-  { id: 'breakfast', name: 'Breakfast' },
-  { id: 'seafood', name: 'Seafood' },
-  { id: 'vegetarian', name: 'Meat alternatives' },
+  { id: 'all', name: 'A little of everything', styles: [] },
+  { id: 'classic-mission', name: 'Mission classics', styles: ['classic-mission'] },
+  { id: 'california-style', name: 'Fries inside', styles: ['california-style'] },
+  { id: 'breakfast', name: 'Breakfast', styles: ['breakfast'] },
+  { id: 'seafood', name: 'Seafood', styles: ['seafood'] },
+  {
+    id: 'vegetarian',
+    name: 'Meat alternatives',
+    styles: ['vegetarian-standout', 'vegetarian-options'],
+  },
 ];
+export const categoryIds = (p: Place) =>
+  categories.filter((c) => c.styles.some((s) => p.styles.includes(s))).map((c) => c.id);
 export function branchEntities(p: Place) {
   return p.locations
     .filter((l) => l.operating_status === 'listed')
