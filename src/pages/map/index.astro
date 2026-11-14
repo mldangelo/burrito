@@ -1,7 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { catalog, path, absolute } from '../../lib/catalog';
+import { catalog, path, absolute, sourceMap } from '../../lib/catalog';
 import { mapLocations, mapGroups } from '../../lib/map.mjs';
+import { criticalReviews, mapStyles, reviewKinds } from '../../lib/map-filters.mjs';
 import geocodes from '../../../data/geocodes.json';
 import svg from '../../../public/maps/sf-burrito-map.svg?raw';
 const inlineMap = svg
@@ -19,6 +20,16 @@ const clientStops = locations.map((l) => {
     url: path(`places/${l.placeId}/#${l.id}`),
     order: place.standout_items.find((i) => i.location_ids.includes(l.id))?.name ?? null,
     directions: branch.maps_url,
+    styles: place.styles,
+    reviews: criticalReviews(place, l.id).map((review) => ({
+      kind: review.evidence,
+      label: reviewKinds[review.evidence],
+      summary: review.summary,
+      sources: review.source_ids.map((id) => {
+        const source = sourceMap.get(id)!;
+        return { title: source.title, url: source.url, publishedOn: source.published_on };
+      }),
+    })),
   };
 });
 const unmatched = catalog.places
@@ -36,14 +47,14 @@ const structured = [
     url: absolute('map/'),
     image: absolute('maps/sf-burrito-map.svg'),
     description:
-      'An interactive vector map of approximate burrito address locations, with restaurant name labels, search, branch details and source-linked neighborhood geography.',
+      'An interactive vector map of approximate burrito address locations, with restaurant name labels, style filters, critical-review highlights, search, branch details and source-linked neighborhood geography.',
   },
 ];
 ---
 
 <Base
   title="The San Francisco burrito map"
-  description={`An interactive SVG field map of San Francisco burrito stops. Search ${locations.length} approximate address locations, zoom to reveal restaurant names, and explore branch details.`}
+  description={`An interactive SVG field map of San Francisco burrito stops. Search ${locations.length} approximate address locations, filter California- or Mission-style burritos, and highlight critic-reviewed branches.`}
   structured={structured}
 >
   <div class="wrap">
@@ -59,13 +70,6 @@ const structured = [
         for its address, order and field notes.
       </p>
       <div class="map-actions">
-        <a
-          class="button primary"
-          href={path('maps/sf-burrito-map.svg')}
-          download="sf-burrito-map.svg"
-        >
-          Download the SVG ↓
-        </a>
         <a class="text-link" href={path('explore/?view=map')}>
           Open the street map ↗
         </a>
@@ -76,30 +80,69 @@ const structured = [
     </header>
     <div class="page-body">
       <figure class="field-map-figure">
-        <div id="interactive-map-controls" class="interactive-map-controls" hidden>
-          <form id="map-search-form" role="search">
-            <label for="map-search">Find a restaurant, street or neighborhood</label>
-            <div class="map-search-input">
-              <input
-                id="map-search"
-                type="search"
-                placeholder="Try El Farolito or Mission"
-                autocomplete="off"
-              />
-              <button id="map-clear" class="quiet-button" type="button" hidden>
-                Clear
+        <div id="interactive-map-controls" hidden>
+          <div class="interactive-map-controls">
+            <form id="map-search-form" role="search">
+              <label for="map-search">Find a restaurant, street or neighborhood</label>
+              <div class="map-search-input">
+                <input
+                  id="map-search"
+                  type="search"
+                  placeholder="Try El Farolito or Mission"
+                  autocomplete="off"
+                />
+                <button id="map-clear" class="quiet-button" type="button" hidden>
+                  Clear
+                </button>
+              </div>
+            </form>
+            <div class="map-navigation" role="group" aria-label="Map navigation">
+              <button id="map-zoom-out" type="button" aria-label="Zoom out">
+                −
+              </button>
+              <button id="map-zoom-in" type="button" aria-label="Zoom in">
+                +
+              </button>
+              <button id="map-fit" type="button">
+                Fit city
               </button>
             </div>
-          </form>
-          <div class="map-navigation" role="group" aria-label="Map navigation">
-            <button id="map-zoom-out" type="button" aria-label="Zoom out">
-              −
-            </button>
-            <button id="map-zoom-in" type="button" aria-label="Zoom in">
-              +
-            </button>
-            <button id="map-fit" type="button">
-              Fit city
+          </div>
+          <div class="map-filter-row">
+            <fieldset class="map-style-filter" aria-describedby="map-style-hint">
+              <legend>Burrito style</legend>
+              <div class="map-style-options">
+                {mapStyles.map((style) => (
+                  <label>
+                    <input
+                      type="radio"
+                      name="map-style"
+                      value={style.id}
+                      checked={style.id === 'all'}
+                    />
+                    <span>{style.label}</span>
+                  </label>
+                ))}
+              </div>
+              <p id="map-style-hint">Restaurant styles. Menus can vary by location.</p>
+            </fieldset>
+            <div class="map-review-filter">
+              <label class="map-review-toggle">
+                <input
+                  id="map-highlight-reviews"
+                  type="checkbox"
+                  aria-describedby="map-review-hint"
+                />
+                <span aria-hidden="true">★</span> Highlight critically reviewed
+              </label>
+              <p id="map-review-hint">
+                Gold marks burrito or restaurant coverage, including archive reviews. Select a stop
+                for sources.
+              </p>
+            </div>
+            <button id="map-neighborhood" class="chip selected" type="button" hidden></button>
+            <button id="map-reset" class="quiet-button" type="button" hidden>
+              Reset filters
             </button>
           </div>
         </div>

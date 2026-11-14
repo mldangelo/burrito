@@ -1,3 +1,4 @@
+import { criticalReviews, filterMapStops } from '../src/lib/map-filters.mjs';
 import { boxesOverlap, groupLabel, placeLabels } from '../src/lib/map-labels.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -108,4 +109,93 @@ test('screen-space label placement never overlaps labels or obstacles across vie
         for (let j = i + 1; j < placed.length; j++)
           assert.equal(boxesOverlap(placed[i], placed[j], 0), false);
     }
+});
+
+test('critical coverage stays with reviewed branches and preserves evidence categories', () => {
+  const place = (id) => catalog.places.find((p) => p.id === id);
+  assert.ok(criticalReviews(place('el-farolito'), 'el-farolito-2779-mission-st').length);
+  assert.equal(criticalReviews(place('el-farolito'), 'el-farolito-1230-grant-ave').length, 0);
+  assert.equal(
+    criticalReviews(place('suavecito'), place('suavecito').primary_location_id).length,
+    0,
+  );
+  assert.equal(criticalReviews(place('el-faro'), place('el-faro').primary_location_id).length, 0);
+  assert.equal(
+    criticalReviews(place('tacko'), place('tacko').primary_location_id)[0].evidence,
+    'restaurant_or_taco_editorial',
+  );
+  assert.equal(
+    criticalReviews(place('el-toro'), place('el-toro').primary_location_id)[0].evidence,
+    'historical_burrito_review',
+  );
+  const page = load(readFileSync('dist/map/index.html', 'utf8'));
+  const stops = JSON.parse(page('#field-map-data').text());
+  for (const stop of stops) {
+    const p = place(stop.placeId);
+    const expected = criticalReviews(p, stop.id);
+    assert.deepEqual(
+      stop.reviews.map((r) => r.kind),
+      expected.map((r) => r.evidence),
+    );
+    assert.deepEqual(
+      stop.reviews.flatMap((r) => r.sources.map((s) => s.url)),
+      expected.flatMap((r) =>
+        r.source_ids.map((id) => catalog.sources.find((source) => source.id === id).url),
+      ),
+    );
+  }
+});
+
+test('map styles combine with search and exact neighborhood scope', () => {
+  const page = load(readFileSync('dist/map/index.html', 'utf8'));
+  const stops = JSON.parse(page('#field-map-data').text());
+  const original = JSON.stringify(stops);
+  const sisig = filterMapStops(stops, { style: 'california-style', query: 'senor valencia' });
+  assert.deepEqual(
+    sisig.map((s) => s.id),
+    ['senor-sisig-990-valencia-st'],
+  );
+  assert.equal(
+    filterMapStops(stops, { style: 'classic-mission', query: 'senor valencia' }).length,
+    0,
+  );
+  const mission = filterMapStops(stops, { neighborhood: 'Mission' });
+  assert.ok(mission.some((s) => s.id === 'la-taqueria-2889-mission-st'));
+  assert.ok(!mission.some((s) => s.id === 'el-farolito-4817-mission-st'));
+  assert.ok(
+    filterMapStops(stops, { style: 'classic-mission' }).some(
+      (s) => s.id === 'el-farolito-4817-mission-st',
+    ),
+  );
+  assert.equal(JSON.stringify(stops), original);
+});
+
+test('Mission chapter exposes every listed local branch once in its directory', () => {
+  const page = load(readFileSync('dist/neighborhoods/mission/index.html', 'utf8'));
+  const expected = catalog.places
+    .filter((p) => p.status !== 'watchlist')
+    .flatMap((p) => p.locations)
+    .filter((l) => l.neighborhood === 'Mission' && l.operating_status === 'listed')
+    .map((l) => l.id)
+    .sort();
+  const actual = page('.mission-street li[data-location-id]')
+    .toArray()
+    .map((el) => page(el).attr('data-location-id'))
+    .sort();
+  assert.deepEqual(actual, expected);
+  for (const el of page('.mission-street li').toArray()) {
+    const id = page(el).attr('data-location-id');
+    assert.ok(
+      page(el)
+        .find('a')
+        .attr('href')
+        .endsWith('#' + id),
+    );
+  }
+  const extraBranch = page(
+    '[data-location-id="el-farolito-2950-24th-st"] .mission-review-label',
+  ).text();
+  assert.ok(!extraBranch.includes('Burrito review'));
+  assert.ok(page('a[href="/burrito/map/?neighborhood=Mission&reviews=1"]').length > 0);
+  assert.equal(load(readFileSync('dist/map/index.html', 'utf8'))('a[download]').length, 0);
 });

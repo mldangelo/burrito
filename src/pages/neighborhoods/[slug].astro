@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import MissionGuide from '../../components/MissionGuide.astro';
 import PlaceCard from '../../components/PlaceCard.astro';
 import { neighborhoods, inNeighborhood, slug, path, absolute } from '../../lib/catalog';
 export function getStaticPaths() {
@@ -7,59 +8,77 @@ export function getStaticPaths() {
 }
 const { name } = Astro.props;
 const picks = inNeighborhood(name);
+const localLocations = picks.flatMap((place) =>
+  place.locations
+    .filter((location) => location.neighborhood === name && location.operating_status === 'listed')
+    .map((location) => ({
+      name: place.name.split(' — ')[0],
+      url: absolute(`places/${place.id}/#${location.id}`),
+    })),
+);
 const structured = [
   {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `Burritos in ${name}, San Francisco`,
-    itemListElement: picks.map((p, i) => ({
+    itemListElement: (name === 'Mission'
+      ? localLocations
+      : picks.map((p) => ({ name: p.name, url: absolute(`places/${p.id}/`) }))
+    ).map((entry, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      name: p.name,
-      url: absolute(`places/${p.id}/`),
+      ...entry,
     })),
   },
 ];
 ---
 
 <Base
-  title={`Burritos in ${name}`}
-  description={`Explore ${picks.length} burrito ${picks.length === 1 ? 'place' : 'places'} with listed branches in ${name}, San Francisco. Addresses, posted hours and branch-specific review evidence.`}
+  title={name === 'Mission' ? 'The Mission burrito field guide' : `Burritos in ${name}`}
+  description={
+    name === 'Mission'
+      ? `A Mission neighborhood burrito field guide: ${localLocations.length} listed locations, starting picks, a street-by-street directory, an interactive map, and branch-specific review sources.`
+      : `Explore ${picks.length} burrito ${picks.length === 1 ? 'place' : 'places'} with listed branches in ${name}, San Francisco. Addresses, posted hours and branch-specific review evidence.`
+  }
   structured={structured}
 >
-  <div class="wrap">
-    <header class="page-heading">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href={path('neighborhoods/')}>Neighborhoods</a>
-        <span>/</span>
-        <span>{name}</span>
-      </nav>
-      <p class="eyebrow">SAN FRANCISCO / NEIGHBORHOOD NOTES</p>
-      <h1>
-        {name},<br />
-        <em>wrapped up.</em>
-      </h1>
-      <p class="dek">
-        {picks.length} {picks.length === 1 ? 'place' : 'places'} with a listed branch here. Each
-        entry keeps the address, schedule and review evidence tied to the right location.
-      </p>
-      <a
-        class="text-link"
-        href={path('explore/') + `?neighborhood=${encodeURIComponent(name)}&view=map`}
-      >
-        See this neighborhood on the map ↗
-      </a>
-    </header>
-    <div class="page-body">
-      <div class="place-grid">
-        {picks.map((p, i) => (
-          <PlaceCard place={p} neighborhood={name} number={i + 1} />
-        ))}
+  {name === 'Mission' ? (
+    <MissionGuide />
+  ) : (
+    <div class="wrap">
+      <header class="page-heading">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href={path('neighborhoods/')}>Neighborhoods</a>
+          <span>/</span>
+          <span>{name}</span>
+        </nav>
+        <p class="eyebrow">SAN FRANCISCO / NEIGHBORHOOD NOTES</p>
+        <h1>
+          {name},<br />
+          <em>wrapped up.</em>
+        </h1>
+        <p class="dek">
+          {picks.length} {picks.length === 1 ? 'place' : 'places'} with a listed branch here. Each
+          entry keeps the address, schedule and review evidence tied to the right location.
+        </p>
+        <a
+          class="text-link"
+          href={path('explore/') + `?neighborhood=${encodeURIComponent(name)}&view=map`}
+        >
+          See this neighborhood on the map ↗
+        </a>
+      </header>
+      <div class="page-body">
+        <div class="place-grid">
+          {picks.map((p, i) => (
+            <PlaceCard place={p} neighborhood={name} number={i + 1} />
+          ))}
+        </div>
+        <p class="map-caption">
+          An additional branch does not inherit a reviewed branch’s verdict. Follow “Hours &
+          details” for this neighborhood’s address.
+        </p>
       </div>
-      <p class="map-caption">
-        An additional branch does not inherit a reviewed branch’s verdict. Follow “Hours & details”
-        for this neighborhood’s address.
-      </p>
     </div>
-  </div>
+  )}
 </Base>

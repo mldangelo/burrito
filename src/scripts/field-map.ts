@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { mapGroups, markerRadius } from '../lib/map.mjs';
 import { placeLabels, groupLabel, boxesOverlap } from '../lib/map-labels.mjs';
-import { normalize } from '../lib/filter.mjs';
+import { filterMapStops, mapStyles } from '../lib/map-filters.mjs';
 
 type Stop = {
   id: string;
@@ -16,6 +16,13 @@ type Stop = {
   url: string;
   order: string | null;
   directions: string;
+  styles: string[];
+  reviews: {
+    kind: string;
+    label: string;
+    summary: string;
+    sources: { title: string; url: string; publishedOn: string | null }[];
+  }[];
 };
 const stops: Stop[] = JSON.parse(document.querySelector('#field-map-data')!.textContent!);
 const host = document.querySelector<HTMLElement>('#map-drawing')!;
@@ -28,6 +35,20 @@ const panelBody = document.querySelector<HTMLElement>('#map-selection-body')!;
 const zoomSelection = document.querySelector<HTMLButtonElement>('#zoom-selection')!;
 const clear = document.querySelector<HTMLButtonElement>('#map-clear')!;
 const close = document.querySelector<HTMLButtonElement>('#close-selection')!;
+const styleInputs = [...document.querySelectorAll<HTMLInputElement>('input[name="map-style"]')];
+const highlight = document.querySelector<HTMLInputElement>('#map-highlight-reviews')!;
+const reset = document.querySelector<HTMLButtonElement>('#map-reset')!;
+const neighborhoodButton = document.querySelector<HTMLButtonElement>('#map-neighborhood')!;
+const params = new URLSearchParams(window.location.search);
+const initialStyle = params.get('style');
+if (mapStyles.some((style) => style.id === initialStyle))
+  styleInputs.forEach((input) => (input.checked = input.value === initialStyle));
+search.value = params.get('q') ?? '';
+highlight.checked = params.get('reviews') === '1';
+let neighborhood = stops.some((stop) => stop.neighborhood === params.get('neighborhood'))
+  ? params.get('neighborhood')!
+  : '';
+const currentStyle = () => styleInputs.find((input) => input.checked)!.value;
 const coarse = matchMedia('(pointer:coarse)');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d')!;
@@ -88,6 +109,35 @@ try {
     if (text !== undefined) el.textContent = text;
     return el;
   }
+  function reviewBadge(stop: Stop) {
+    const badge = node(
+      'span',
+      '★ ' + [...new Set(stop.reviews.map((review) => review.label))].join(' · '),
+    );
+    badge.className = 'map-review-badge';
+    return badge;
+  }
+  function syncFilters() {
+    reset.hidden =
+      !search.value.trim() && currentStyle() === 'all' && !highlight.checked && !neighborhood;
+    neighborhoodButton.hidden = !neighborhood;
+    neighborhoodButton.textContent = `${neighborhood} ×`;
+    neighborhoodButton.setAttribute('aria-label', `Clear ${neighborhood} neighborhood filter`);
+    document
+      .querySelector('.field-map-figure')!
+      .classList.toggle('reviews-highlighted', highlight.checked);
+    const next = new URLSearchParams();
+    if (search.value.trim()) next.set('q', search.value.trim());
+    if (currentStyle() !== 'all') next.set('style', currentStyle());
+    if (neighborhood) next.set('neighborhood', neighborhood);
+    if (highlight.checked) next.set('reviews', '1');
+    const query = next.toString();
+    history.replaceState(
+      null,
+      '',
+      `${location.pathname}${query ? '?' + query : ''}${location.hash}`,
+    );
+  }
   function showSelection(members: Stop[], focusPanel = false) {
     selected = members;
     panel.hidden = false;
@@ -98,6 +148,8 @@ try {
     for (const stop of members) {
       const article = node('article');
       article.className = 'map-detail';
+      article.classList.toggle('has-review', stop.reviews.length > 0);
+      article.dataset.locationId = stop.id;
       const heading = node('h3');
       const title = node('a', stop.name);
       title.href = stop.url;
@@ -126,6 +178,28 @@ try {
         requestRender();
       });
       article.append(heading, address, order, links);
+      if (stop.reviews.length) {
+        article.append(reviewBadge(stop));
+        const coverage = node('details');
+        coverage.className = 'map-review-sources';
+        coverage.append(node('summary', 'Read the coverage'));
+        coverage.append(
+          node('p', 'Coverage applies to this branch, not necessarily the selected burrito style.'),
+        );
+        for (const review of stop.reviews) {
+          coverage.append(node('h4', review.label), node('p', review.summary));
+          const sources = node('ul');
+          for (const source of review.sources) {
+            const item = node('li');
+            const link = node('a', source.title);
+            link.href = source.url;
+            item.append(link, node('small', source.publishedOn ?? 'Publication date not listed'));
+            sources.append(item);
+          }
+          coverage.append(sources);
+        }
+        article.append(coverage);
+      } else article.append(node('p', 'No branch-specific critical review recorded.'));
       if (members.length > 1) article.append(find);
       panelBody.append(article);
     }
@@ -143,9 +217,15 @@ try {
     const markerOptions = coarse.matches
       ? { single: 22, group: 22, gap: 6 }
       : { single: 13, group: 16, gap: 6 };
+    syncFilters();
     const screen = filtered.map((s) => {
       const p = map.latLngToContainerPoint(xy(s));
-      return { ...s, x: p.x, y: p.y };
+      return {
+        ...s,
+        x: p.x,
+        y: p.y,
+        priority: s.priority + (highlight.checked && s.reviews.length ? 100 : 0),
+      };
     });
     const groups = mapGroups(screen, markerOptions).filter(
       (g) =>
@@ -191,7 +271,9 @@ try {
     context.font = '600 12px Arial';
     const items = groups.map((g) => ({
       ...g,
-      text: groupLabel(g),
+      text:
+        (highlight.checked && g.locations.some((stop) => stop.reviews.length) ? '★ ' : '') +
+        groupLabel(g),
       r: markerRadius(g, markerOptions),
       priority:
         (g.locations.some((l) => selectedIds.has(l.id)) ? 1000 : 0) +
@@ -221,11 +303,18 @@ try {
     const buttons = new Map();
     for (const group of groups) {
       const members = group.locations.map((l) => stops.find((s) => s.id === l.id)!);
-      const button = node('button', members.length > 1 ? String(members.length) : '');
+      const reviewCount = members.filter((stop) => stop.reviews.length).length;
+      const reviewed = highlight.checked && reviewCount > 0;
+      const button = node(
+        'button',
+        members.length > 1 ? String(members.length) : reviewed ? '★' : '',
+      );
       button.type = 'button';
       button.className = 'field-map-pin';
       button.dataset.mapKey = group.id;
       button.dataset.ids = members.map((s) => s.id).join(' ');
+      button.dataset.reviewCount = String(reviewCount);
+      button.classList.toggle('is-reviewed', reviewed);
       button.classList.toggle(
         'is-selected',
         members.some((s) => selectedIds.has(s.id)),
@@ -241,6 +330,11 @@ try {
           ? `${members[0].name}, ${members[0].address}`
           : `${members.length} nearby locations: ${members.map((s) => s.name).join(', ')}`,
       );
+      if (reviewed)
+        button.setAttribute(
+          'aria-label',
+          `${button.getAttribute('aria-label')}. ${reviewCount} with critical coverage; select for review types and sources.`,
+        );
       button.setAttribute('aria-controls', 'map-selection');
       button.setAttribute('aria-expanded', String(members.some((s) => selectedIds.has(s.id))));
       button.title = button.getAttribute('aria-label')!;
@@ -270,6 +364,10 @@ try {
       button.className = 'field-map-name';
       button.dataset.mapKey = label.id + '-label';
       button.dataset.groupId = label.id;
+      button.classList.toggle(
+        'is-reviewed',
+        buttons.get(label.id).classList.contains('is-reviewed'),
+      );
       button.style.width = `${label.w}px`;
       button.style.height = `${label.h}px`;
       at(button, label.x, label.y);
@@ -302,9 +400,12 @@ try {
       restore?.focus({ preventScroll: true });
     }
     const visible = groups.reduce((sum, g) => sum + g.locations.length, 0);
+    const reviewCount = filtered.filter((stop) => stop.reviews.length).length;
     status.textContent = filtered.length
-      ? `${visible} of ${filtered.length} locations in view · ${placed.length} names shown · zoom in for more`
-      : 'No matching locations. Clear your search to explore again.';
+      ? `${visible} of ${filtered.length} matching locations in view${highlight.checked ? ` · ${reviewCount} with critical coverage (gold)` : ''} · zoom in for more names`
+      : 'No matching locations. Change the style, clear your search, or reset filters.';
+    host.dataset.matchingLocations = String(filtered.length);
+    host.dataset.reviewedLocations = String(reviewCount);
     host.dataset.visibleLabels = String(placed.length);
     host.dataset.visibleMarkers = String(groups.length);
     host.dataset.zoom = String(map.getZoom());
@@ -336,29 +437,17 @@ try {
   });
   document.querySelector('#map-zoom-in')!.addEventListener('click', () => map.zoomIn());
   document.querySelector('#map-zoom-out')!.addEventListener('click', () => map.zoomOut());
-  document.querySelector('#map-fit')!.addEventListener('click', () => {
-    clearTimeout(timer);
-    search.value = '';
-    filter();
-  });
+  document.querySelector('#map-fit')!.addEventListener('click', fitCity);
   zoomSelection.addEventListener('click', () => {
     zoomMembers(selected);
     if (coarse.matches) host.scrollIntoView({ block: 'center', behavior: 'instant' });
   });
   close.addEventListener('click', () => {
+    const previousKey = selectedFocus;
     selected = [];
-    panelTitle.textContent = 'Find your next stop.';
-    panelBody.replaceChildren(
-      node(
-        'p',
-        'Select a restaurant name or a marker for its address, suggested order and field notes.',
-      ),
-    );
-    close.hidden = true;
-    zoomSelection.hidden = true;
-    render();
+    filter(false);
     const previous = [...content.querySelectorAll<HTMLElement>('[data-map-key]')].find(
-      (b) => b.dataset.mapKey === selectedFocus,
+      (b) => b.dataset.mapKey === previousKey,
     );
     (previous ?? host).focus({ preventScroll: true });
   });
@@ -370,15 +459,13 @@ try {
       }
     });
   let timer: ReturnType<typeof setTimeout>;
-  function filter() {
-    const tokens = normalize(search.value).trim().split(/\s+/).filter(Boolean);
-    filtered = stops.filter((s) =>
-      tokens.every((t) => normalize(`${s.name} ${s.address} ${s.neighborhood}`).includes(t)),
-    );
-    clear.hidden = !tokens.length;
+  function filter(refit = true) {
+    const query = search.value.trim();
+    filtered = filterMapStops(stops, { query, style: currentStyle(), neighborhood });
+    clear.hidden = !query;
     selected = [];
     selectedFocus = null;
-    if (tokens.length) {
+    if (query || currentStyle() !== 'all' || neighborhood) {
       panelTitle.textContent = filtered.length
         ? `${filtered.length} matching locations`
         : 'No matching stops';
@@ -389,7 +476,10 @@ try {
         const b = node('button');
         b.type = 'button';
         b.className = 'map-search-result';
+        b.dataset.locationId = stop.id;
+        b.classList.toggle('has-review', stop.reviews.length > 0);
         b.append(node('strong', stop.name), node('span', `${stop.address} · ${stop.neighborhood}`));
+        if (stop.reviews.length) b.append(reviewBadge(stop));
         b.addEventListener('click', () => {
           selected = [stop];
           map.setView(xy(stop), Math.max(map.getZoom(), 1.8), { animate: false });
@@ -398,8 +488,10 @@ try {
         panelBody.append(b);
       }
       if (!filtered.length)
-        panelBody.append(node('p', 'Try a restaurant name, a street, or another neighborhood.'));
-      if (filtered.length)
+        panelBody.append(
+          node('p', 'Try another style or search term, or reset filters to see every stop.'),
+        );
+      if (refit && filtered.length)
         map.fitBounds(L.latLngBounds(filtered.map(xy)), {
           padding: [80, 70],
           maxZoom: 2,
@@ -415,7 +507,7 @@ try {
       );
       close.hidden = true;
       zoomSelection.hidden = true;
-      fitCity();
+      if (refit) fitCity();
     }
     render();
   }
@@ -434,6 +526,26 @@ try {
     filter();
     search.focus();
   });
+  for (const input of styleInputs)
+    input.addEventListener('change', () => {
+      clearTimeout(timer);
+      filter();
+    });
+  highlight.addEventListener('change', render);
+  neighborhoodButton.addEventListener('click', () => {
+    neighborhood = '';
+    clearTimeout(timer);
+    filter();
+  });
+  reset.addEventListener('click', () => {
+    clearTimeout(timer);
+    search.value = '';
+    styleInputs.forEach((input) => (input.checked = input.value === 'all'));
+    highlight.checked = false;
+    neighborhood = '';
+    filter();
+    styleInputs[0].focus();
+  });
   const observer = new ResizeObserver(() => {
     map.invalidateSize({ pan: false });
     if (cityView) fitCity();
@@ -448,7 +560,7 @@ try {
   document.querySelector<HTMLElement>('#interactive-map-controls')!.hidden = false;
   panel.hidden = false;
   fitCity();
-  render();
+  filter();
   host.dataset.ready = 'true';
 } catch (error) {
   if (map) map.remove();
@@ -458,6 +570,6 @@ try {
   document.querySelector<HTMLElement>('#interactive-map-controls')!.hidden = true;
   panel.hidden = true;
   status.textContent =
-    'The interactive map could not load. The labeled SVG and stop index still work.';
+    'The interactive map could not load. The static map and stop index still work.';
   console.error(error);
 }

@@ -30,6 +30,10 @@ Every place has /places/{id}/ (HTML), /data/places/{id}.json (record plus source
 ## Curated guides
 ${guides.map((g) => `- [${g.label}](${absolute(`guides/${g.id}/`)}): ${g.description}`).join('\n')}
 
+## Neighborhood field guide
+- [The Mission](${absolute('neighborhoods/mission/')}): branch-specific starting picks, a street-by-street directory, review labels, and an exact-neighborhood map view.
+- [Interactive map](${absolute('map/')}): California-style and Mission-style filters, critical-coverage highlights, branch-scoped sources. Styles are restaurant-level catalog tags; menus may vary by branch.
+
 ## Place index
 ${places.map((p) => `- [${shortName(p)}](${absolute(`data/places/${p.id}.md`)}): ${p.status}; ${p.summary}`).join('\n')}
 `,

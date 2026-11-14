@@ -1,0 +1,304 @@
+---
+import { catalog, currentPlaces, path, shortName, evidenceLabels } from '../lib/catalog';
+import { criticalReviews } from '../lib/map-filters.mjs';
+import { mapLocations, mapGroups, project } from '../lib/map.mjs';
+import geocodes from '../../data/geocodes.json';
+import rawGeography from '../../data/map/neighborhoods.geojson?raw';
+const geography = JSON.parse(rawGeography);
+const stops = currentPlaces.flatMap((place) =>
+  place.locations
+    .filter(
+      (location) => location.operating_status === 'listed' && location.neighborhood === 'Mission',
+    )
+    .map((location) => ({ place, location, reviews: criticalReviews(place, location.id) })),
+);
+const burritoReviewed = stops.filter((stop) =>
+  stop.reviews.some((review) => review.evidence === 'burrito_specific_editorial'),
+);
+const coordinates = mapLocations(catalog, geocodes).filter(
+  (stop) => stop.neighborhood === 'Mission',
+);
+const groups = mapGroups(coordinates, { single: 3.4, group: 5, gap: 1.5 });
+const minX = Math.min(...coordinates.map((stop) => stop.x)) - 18;
+const minY = Math.min(...coordinates.map((stop) => stop.y)) - 18;
+const width = Math.max(...coordinates.map((stop) => stop.x)) - minX + 18;
+const height = Math.max(...coordinates.map((stop) => stop.y)) - minY + 18;
+const shape = (geometry) =>
+  (geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates])
+    .flat()
+    .map(
+      (ring) =>
+        ring
+          .map(
+            (position, i) =>
+              `${i ? 'L' : 'M'}${project(position)
+                .map((n) => n.toFixed(2))
+                .join(',')}`,
+          )
+          .join('') + 'Z',
+    )
+    .join('');
+const starts = [
+  {
+    id: 'la-taqueria',
+    label: 'THE RICE-FREE ONE',
+    note: 'Carne asada, dorado. A griddled exterior and no rice make a useful first comparison.',
+  },
+  {
+    id: 'el-farolito',
+    label: 'THE LOADED CLASSIC',
+    note: 'Start with the super burrito at 2779 Mission Street, the address covered by the review.',
+  },
+  {
+    id: 'la-espiga',
+    label: 'THE CHICHARRÓN DETOUR',
+    note: 'A different pork filling on 24th Street. The burrito review also points to chorizo at breakfast.',
+  },
+].map((pick) => ({
+  ...pick,
+  stop: stops.find(
+    (stop) => stop.place.id === pick.id && stop.location.id === stop.place.primary_location_id,
+  )!,
+}));
+const streetGroups = [
+  { name: 'Mission Street', match: (address: string) => /^\d+ Mission St$/.test(address) },
+  { name: '24th Street', match: (address: string) => /^\d+ 24th St$/.test(address) },
+  { name: 'Valencia Street', match: (address: string) => /^\d+ Valencia St$/.test(address) },
+  { name: 'Around the neighborhood', match: () => true },
+];
+const remaining = new Set(stops);
+const streets = streetGroups.map((street) => {
+  const entries = [...remaining].filter((stop) =>
+    street.match(stop.location.address.street_address),
+  );
+  entries.forEach((stop) => remaining.delete(stop));
+  entries.sort((a, b) =>
+    a.location.address.street_address.localeCompare(b.location.address.street_address, 'en', {
+      numeric: true,
+    }),
+  );
+  return { name: street.name, entries };
+});
+const variations = [
+  {
+    id: 'breakfast-little',
+    title: 'Start with breakfast',
+    copy: 'Breakfast Little is at 3275 22nd Street. Follow the current address in the field notes.',
+  },
+  {
+    id: 'senor-sisig',
+    title: 'Put fries inside',
+    copy: 'The California Sisig is a Filipino-Mexican turn on the fries-inside burrito. This stop is the Valencia branch.',
+  },
+  {
+    id: 'chuys-fiestas',
+    title: 'Make it shrimp',
+    copy: 'The super shrimp burrito with black beans has its own first-person Eater review.',
+  },
+].map((pick) => ({ ...pick, stop: stops.find((stop) => stop.place.id === pick.id)! }));
+const branchURL = (stop) => path(`places/${stop.place.id}/#${stop.location.id}`);
+const reviewLabel = (stop) =>
+  stop.reviews.length
+    ? [...new Set(stop.reviews.map((review) => evidenceLabels[review.evidence]))].join(' · ')
+    : (stop.place.reviews
+        .filter((review) => review.location_ids.includes(stop.location.id))
+        .map((review) => evidenceLabels[review.evidence])[0] ?? 'No review for this branch');
+---
+
+<div class="wrap mission-guide">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href={path('neighborhoods/')}>Neighborhoods</a>
+    <span>/</span>
+    <span>Mission</span>
+  </nav>
+  <header class="mission-hero">
+    <div class="mission-hero-copy">
+      <p class="eyebrow">NEIGHBORHOOD FIELD NOTES / SAN FRANCISCO</p>
+      <h1>
+        The Mission.
+        <br />
+        <em>Bring an appetite.</em>
+      </h1>
+      <p class="dek">
+        Rice-free and dorado. Loaded supers. Chicharrón on 24th Street. Pick a starting point, then
+        come back for another version.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href={path('map/?neighborhood=Mission&reviews=1')}>
+          Explore the Mission map ↗
+        </a>
+        <a class="text-link" href="#mission-stops">
+          Every stop ↓
+        </a>
+      </div>
+      <dl class="mission-stats">
+        <div>
+          <dt>{stops.length}</dt>
+          <dd>listed locations</dd>
+        </div>
+        <div>
+          <dt>{burritoReviewed.length}</dt>
+          <dd>with burrito reviews</dd>
+        </div>
+        <div>
+          <dt>{coordinates.length}</dt>
+          <dd>on the map</dd>
+        </div>
+      </dl>
+    </div>
+    <a
+      class="mission-map-card"
+      href={path('map/?neighborhood=Mission&reviews=1')}
+      aria-label="Explore the interactive Mission burrito map"
+    >
+      <div class="mission-map-heading">
+        <span>MISSION / FIELD MAP</span>
+        <span aria-hidden="true">N ↑</span>
+      </div>
+      <svg
+        viewBox={`${minX} ${minY} ${width} ${height}`}
+        role="img"
+        aria-label="Approximate Mission burrito locations within DataSF neighborhood outlines"
+      >
+        {geography.features.map((feature) => (
+          <path
+            d={shape(feature.geometry)}
+            class:list={[
+              'mission-map-land',
+              { 'mission-map-area': feature.properties.name === 'Mission' },
+            ]}
+          />
+        ))}
+        {groups.map((group) => (
+          <g>
+            <circle cx={group.x} cy={group.y} r={group.locations.length > 1 ? 5 : 3.4} />
+            {group.locations.length > 1 && (
+              <text x={group.x} y={group.y + 1.3}>
+                {group.locations.length}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+      <div class="mission-map-footer">
+        <span>Approximate addresses · numbers count stops</span>
+        <strong>Open the map ↗</strong>
+      </div>
+    </a>
+  </header>
+
+  <section class="mission-section" aria-labelledby="mission-start">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">THREE WAYS TO BEGIN</p>
+        <h2 id="mission-start">A first stop for every mood.</h2>
+      </div>
+      <p class="small">Starting points, in no ranked order.</p>
+    </div>
+    <div class="mission-picks">
+      {starts.map(({ label, note, stop }) => (
+        <article class="mission-pick" data-location-id={stop.location.id}>
+          <p class="eyebrow">{label}</p>
+          <h3>
+            <a href={branchURL(stop)}>{shortName(stop.place)} ↗</a>
+          </h3>
+          <p class="mission-address">{stop.location.address.street_address}</p>
+          <p>{note}</p>
+          <div class="mission-pick-footer">
+            <span class="evidence">Burrito review</span>
+            <a class="text-link" href={branchURL(stop)}>
+              Order, hours & sources →
+            </a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="mission-section mission-variations" aria-labelledby="mission-variations">
+    <div>
+      <p class="eyebrow">CHANGE THE ORDER</p>
+      <h2 id="mission-variations">
+        There’s more
+        <br />
+        <em>in the tortilla.</em>
+      </h2>
+      <p>Breakfast, fries, shrimp. Three reasons to make another visit.</p>
+      <a class="text-link" href={path('map/?neighborhood=Mission&style=california-style')}>
+        California-style in the Mission ↗
+      </a>
+    </div>
+    <div class="mission-variation-list">
+      {variations.map(({ title, copy, stop }) => (
+        <article>
+          <p class="eyebrow">{title}</p>
+          <h3>
+            <a href={branchURL(stop)}>{shortName(stop.place)} ↗</a>
+          </h3>
+          <p>{copy}</p>
+          <p class="mission-address">{stop.location.address.street_address}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="mission-section" id="mission-stops" aria-labelledby="mission-directory-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">FOLLOW A STREET</p>
+        <h2 id="mission-directory-title">The neighborhood, stop by stop.</h2>
+      </div>
+      <span class="small">{stops.length} locations · addresses and evidence</span>
+    </div>
+    <div class="mission-streets">
+      {streets.map(({ name, entries }) => (
+        <section class="mission-street">
+          <h3>{name}</h3>
+          <ul>
+            {entries.map((stop) => (
+              <li data-location-id={stop.location.id}>
+                <a href={branchURL(stop)}>
+                  <strong>{shortName(stop.place)}</strong>
+                  <span>{stop.location.address.street_address}</span>
+                </a>
+                <span class="mission-review-label">{reviewLabel(stop)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </section>
+
+  <aside class="mission-reading">
+    <div>
+      <p class="eyebrow">READ THE FINE PRINT</p>
+      <h2>
+        One neighborhood.
+        <br />
+        Many kinds of evidence.
+      </h2>
+    </div>
+    <div>
+      <p>
+        Burrito reviews, restaurant or taco coverage, menu finds and archive reviews have different
+        labels. A review of one address stays with that address.
+      </p>
+      <p>
+        El Faro and La Cumbre appear as history stops. The catalog does not settle the competing
+        origin claims or treat historical importance as a current quality verdict.
+      </p>
+      <p>
+        {stops.length - coordinates.length} listed truck locations lack accepted coordinates. They
+        remain in the directory above, with directions on their own pages.
+      </p>
+      <a class="text-link" href={path('guides/mission-classics/')}>
+        Read the Mission classics guide →
+      </a>
+      <p class="small">
+        Neighborhood outline: <a href="https://data.sf.gov/d/gfpk-269f">DataSF</a>. Address points:
+        U.S. Census. Research snapshot: {catalog.updated_on}.
+      </p>
+    </div>
+  </aside>
+</div>
