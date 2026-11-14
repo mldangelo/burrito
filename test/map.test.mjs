@@ -1,3 +1,4 @@
+import { boxesOverlap, groupLabel, placeLabels } from '../src/lib/map-labels.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -59,4 +60,52 @@ test('standalone SVG is deterministic, self-contained, and links every group to 
   }
   assert.ok($('#map-description').text().includes('not rankings'));
   assert.equal(index('.map-stop-group li').length, locations.length);
+});
+
+test('restaurant names in the SVG have separate label boxes and complete link targets', () => {
+  const $ = load(readFileSync('public/maps/sf-burrito-map.svg', 'utf8'), { xmlMode: true });
+  const labels = $('.restaurant-label').toArray();
+  assert.ok(labels.length > 0);
+  const rectangles = labels.map((a) => {
+    assert.ok($(a).attr('href'));
+    assert.ok($(a).find('text').text().length > 0);
+    const r = $(a).find('rect');
+    return { x: +r.attr('x'), y: +r.attr('y'), w: +r.attr('width'), h: +r.attr('height') };
+  });
+  for (let i = 0; i < rectangles.length; i++)
+    for (let j = i + 1; j < rectangles.length; j++)
+      assert.equal(boxesOverlap(rectangles[i], rectangles[j], 0), false);
+});
+test('screen-space label placement never overlaps labels or obstacles across viewport sizes', () => {
+  for (const width of [284, 354, 720, 858, 1160])
+    for (const zoom of [0.35, 0.8, 1.6, 3.2]) {
+      const screen = locations.map((l) => ({
+        ...l,
+        x: (l.x - 600) * zoom + width / 2,
+        y: (l.y - 630) * zoom + 260,
+      }));
+      const groups = mapGroups(screen, { single: 22, group: 22, gap: 6 }).filter(
+        (g) => g.x > 25 && g.y > 25 && g.x < width - 25 && g.y < 495,
+      );
+      const obstacles = groups.map((g) => ({ x: g.x - 22, y: g.y - 22, w: 44, h: 44 }));
+      const items = groups.map((g) => ({
+        ...g,
+        r: 22,
+        text: groupLabel(g),
+        priority: Math.max(...g.locations.map((l) => l.priority)),
+      }));
+      const { placed, hidden } = placeLabels(items, {
+        bounds: { x: 6, y: 6, w: width - 12, h: 508 },
+        obstacles,
+        height: 44,
+      });
+      assert.equal(placed.length + hidden.length, items.length);
+      for (const box of placed) {
+        assert.ok(box.x >= 6 && box.y >= 6 && box.x + box.w <= width - 6 && box.y + box.h <= 514);
+        for (const obstacle of obstacles) assert.equal(boxesOverlap(box, obstacle, 0), false);
+      }
+      for (let i = 0; i < placed.length; i++)
+        for (let j = i + 1; j < placed.length; j++)
+          assert.equal(boxesOverlap(placed[i], placed[j], 0), false);
+    }
 });

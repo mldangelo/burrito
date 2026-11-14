@@ -1347,29 +1347,292 @@ em {
   }
 }
 
-.field-map-scroll.is-enlarged > svg {
-  min-width: 1100px;
-}
-.map-toolbar {
+/* The vector map keeps its paper artwork while labels are laid out in screen pixels. */
+.interactive-map-controls {
   display: flex;
+  align-items: end;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 16px;
+  gap: 24px;
+  margin-bottom: 12px;
 }
-.map-toolbar p {
-  margin: 0;
+.interactive-map-controls form {
+  width: min(100%, 490px);
+}
+.interactive-map-controls label {
+  display: block;
   font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 7px;
 }
-.map-legend-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
+.map-search-input {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.map-search-input input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #a6aa99;
+  border-radius: 3px;
+  background: #fffaf0;
+  color: var(--ink);
+  font-size: 16px;
+  padding: 11px 13px;
+}
+.map-navigation {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.map-navigation button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 14px;
+  font-size: 16px;
+}
+.map-navigation button:last-child {
+  border-right: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.map-navigation button:hover {
+  background: #e7e6d4;
+}
+.map-live-status {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 15px;
+}
+.field-map-layout.is-interactive {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.field-map-scroll.interactive-field-map {
+  height: 650px;
+  overflow: hidden;
+  border-radius: 0;
+  background: #deebe6;
+  z-index: 0;
+}
+.field-map-points {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.field-map-pin,
+.field-map-name {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.field-map-pin {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff8e7;
+  font:
+    600 12px Arial,
+    sans-serif;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  z-index: 2;
+}
+.field-map-pin::before {
+  content: '';
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #fff8e7;
   background: var(--salsa);
   border-radius: 50%;
-  margin-right: 8px;
+  z-index: -1;
+  box-shadow: 0 0 0 1px #9d3b2e55;
 }
-.map-toolbar .view-toggle {
-  margin-left: auto;
+.field-map-pin.is-cluster::before {
+  width: 27px;
+  height: 27px;
+}
+.field-map-pin.is-selected::before,
+.field-map-pin.is-highlighted::before,
+.field-map-pin:hover::before {
+  background: var(--ink);
+}
+.field-map-name {
+  border: 1px solid #bdc1ae;
+  border-radius: 3px;
+  background: #fffaf0;
+  color: var(--ink);
+  font:
+    600 12px Arial,
+    sans-serif;
+  line-height: 1;
+  box-shadow: 0 1px 3px #233c3110;
+  padding: 0 8px;
+  z-index: 3;
+  text-align: center;
+}
+.field-map-name:hover,
+.field-map-name:focus-visible {
+  border-color: var(--salsa);
+  color: var(--salsa);
+}
+.field-map-name.is-selected {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.field-map-pin:focus-visible,
+.field-map-name:focus-visible {
+  outline: 2px solid var(--salsa);
+  outline-offset: 3px;
+}
+.map-label-leader {
+  height: 1px;
+  background: #7f8e7780;
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.map-selection {
+  height: 650px;
+  overflow-y: auto;
+  padding: 23px;
+  border-left: 1px solid var(--line);
+  background: #f9f3e7;
+}
+.map-selection-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 17px;
+}
+.map-selection-heading .eyebrow {
+  margin: 0;
+  font-size: 9px;
+}
+.map-selection-heading button {
+  font-size: 10px;
+}
+.map-selection > h2 {
+  font-size: 29px;
+  margin-bottom: 22px;
+}
+.map-selection #zoom-selection {
+  font-size: 12px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+#map-selection-body > p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.map-detail {
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.map-detail h3 {
+  font-size: 23px;
+  margin-bottom: 11px;
+}
+.map-detail h3 a {
+  text-decoration: none;
+}
+.map-detail p {
+  font-size: 12px;
+  margin-bottom: 13px;
+}
+.map-detail-address {
+  color: var(--muted);
+}
+.map-detail-order {
+  font-weight: 600;
+}
+.map-detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+}
+.map-detail > .quiet-button {
+  margin-top: 12px;
+  font-size: 11px;
+}
+.map-search-result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding: 16px 0;
+  color: var(--ink);
+}
+.map-search-result strong {
+  font: 500 20px var(--serif);
+  display: block;
+  margin-bottom: 6px;
+}
+.map-search-result span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.map-search-result:hover strong {
+  color: var(--salsa);
+}
+.interactive-basemap .district {
+  transition: none;
+}
+@media (max-width: 950px) {
+  .field-map-layout.is-interactive {
+    grid-template-columns: 1fr;
+  }
+  .map-selection {
+    height: auto;
+    max-height: 390px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .field-map-scroll.interactive-field-map {
+    height: 570px;
+  }
+}
+@media (max-width: 600px) {
+  .interactive-map-controls {
+    align-items: stretch;
+    gap: 13px;
+    flex-direction: column;
+  }
+  .map-navigation {
+    align-self: flex-start;
+  }
+  .field-map-scroll.interactive-field-map {
+    height: 520px;
+  }
+  .map-selection {
+    padding: 20px;
+  }
+  .map-live-status {
+    font-size: 11px;
+  }
+  .map-navigation button {
+    min-width: 48px;
+  }
 }

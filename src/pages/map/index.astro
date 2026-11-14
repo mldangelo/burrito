@@ -11,6 +11,16 @@ const inlineMap = svg
   .replaceAll(absolute(), path());
 const locations = mapLocations(catalog, geocodes);
 const groups = mapGroups(locations);
+const clientStops = locations.map((l) => {
+  const place = catalog.places.find((p) => p.id === l.placeId)!;
+  const branch = place.locations.find((b) => b.id === l.id)!;
+  return {
+    ...l,
+    url: path(`places/${l.placeId}/#${l.id}`),
+    order: place.standout_items.find((i) => i.location_ids.includes(l.id))?.name ?? null,
+    directions: branch.maps_url,
+  };
+});
 const unmatched = catalog.places
   .filter((p) => p.status !== 'watchlist')
   .flatMap((p) =>
@@ -26,14 +36,14 @@ const structured = [
     url: absolute('map/'),
     image: absolute('maps/sf-burrito-map.svg'),
     description:
-      'An illustrated vector map of approximate burrito address locations, with source-linked neighborhood geography and grouped stop listings.',
+      'An interactive vector map of approximate burrito address locations, with restaurant name labels, search, branch details and source-linked neighborhood geography.',
   },
 ];
 ---
 
 <Base
   title="The San Francisco burrito map"
-  description="An illustrated SVG field map of San Francisco burrito stops. Explore neighborhoods and 73 approximate address locations, with clickable groups and a downloadable vector map."
+  description={`An interactive SVG field map of San Francisco burrito stops. Search ${locations.length} approximate address locations, zoom to reveal restaurant names, and explore branch details.`}
   structured={structured}
 >
   <div class="wrap">
@@ -45,8 +55,8 @@ const structured = [
         <em>A lot of good lunches.</em>
       </h1>
       <p class="dek">
-        Pick a dot. Follow a neighborhood. The numbered circles gather nearby locations; open one to
-        see every stop inside.
+        Find a name. Follow a neighborhood. Drag, pinch or zoom to explore, then select a restaurant
+        for its address, order and field notes.
       </p>
       <div class="map-actions">
         <a
@@ -66,41 +76,75 @@ const structured = [
     </header>
     <div class="page-body">
       <figure class="field-map-figure">
-        <div class="map-toolbar">
-          <p>
-            <span class="map-legend-dot" aria-hidden="true"></span>
-            {locations.length} locations · numbers group nearby stops
-          </p>
-          <div class="view-toggle map-scale" hidden aria-label="Map size">
-            <button
-              type="button"
-              data-map-scale="fit"
-              aria-controls="map-drawing"
-              aria-pressed="true"
-            >
-              Fit city
+        <div id="interactive-map-controls" class="interactive-map-controls" hidden>
+          <form id="map-search-form" role="search">
+            <label for="map-search">Find a restaurant, street or neighborhood</label>
+            <div class="map-search-input">
+              <input
+                id="map-search"
+                type="search"
+                placeholder="Try El Farolito or Mission"
+                autocomplete="off"
+              />
+              <button id="map-clear" class="quiet-button" type="button" hidden>
+                Clear
+              </button>
+            </div>
+          </form>
+          <div class="map-navigation" role="group" aria-label="Map navigation">
+            <button id="map-zoom-out" type="button" aria-label="Zoom out">
+              −
             </button>
-            <button
-              type="button"
-              data-map-scale="large"
-              aria-controls="map-drawing"
-              aria-pressed="false"
-            >
-              Enlarge
+            <button id="map-zoom-in" type="button" aria-label="Zoom in">
+              +
+            </button>
+            <button id="map-fit" type="button">
+              Fit city
             </button>
           </div>
         </div>
-        <div
-          class="field-map-scroll"
-          id="map-drawing"
-          role="region"
-          aria-label="Illustrated burrito map; enlarge for detail and scroll horizontally"
-          tabindex="0"
-          set:html={inlineMap}
-        />
+        <p id="map-status" class="map-live-status" role="status" aria-live="polite">
+          {locations.length} mapped locations · select a name or marker
+        </p>
+        <div class="field-map-layout">
+          <div
+            class="field-map-scroll"
+            id="map-drawing"
+            role="region"
+            aria-label="Burrito map. Drag to pan, pinch or use the zoom controls. Select a restaurant name or marker for details."
+            tabindex="0"
+            set:html={inlineMap}
+          />
+          <aside
+            id="map-selection"
+            class="map-selection"
+            aria-labelledby="map-selection-title"
+            hidden
+          >
+            <div class="map-selection-heading">
+              <p class="eyebrow">YOUR NEXT STOP</p>
+              <button id="close-selection" class="quiet-button" type="button" hidden>
+                Clear selection
+              </button>
+            </div>
+            <h2 id="map-selection-title" tabindex="-1">
+              Find your next stop.
+            </h2>
+            <button id="zoom-selection" class="button" type="button" hidden>
+              Zoom to these stops ↗
+            </button>
+            <div id="map-selection-body">
+              <p>
+                Select a restaurant name or a marker for its address, suggested order and field
+                notes.
+              </p>
+            </div>
+          </aside>
+        </div>
         <figcaption>
-          Click or tab to a marker. Enlarge for labels and details, then scroll across the map.
-          Every location also appears in the stop index below. The{' '}
+          Names stay readable as you zoom. Crowded labels make room for one another; every marker
+          still opens its full list. Nearby stops separate as you zoom in. All locations also appear
+          in the index below. The{' '}
           <a href="https://data.sf.gov/d/gfpk-269f">DataSF neighborhood outlines</a> are general
           reference areas. Pins use approximate Census address matches; grouped pins sit at the
           average of their members.
@@ -154,16 +198,12 @@ const structured = [
       </section>
     </div>
   </div>
+  <script
+    id="field-map-data"
+    type="application/json"
+    set:html={JSON.stringify(clientStops).replace(/</g, '\\u003c')}
+  />
   <script>
-    const map = document.querySelector<HTMLElement>('#map-drawing')!;
-    const controls = [...document.querySelectorAll<HTMLButtonElement>('[data-map-scale]')];
-    for (const button of controls)
-      button.addEventListener('click', () => {
-        const large = button.dataset.mapScale === 'large';
-        map.classList.toggle('is-enlarged', large);
-        for (const b of controls) b.setAttribute('aria-pressed', String(b === button));
-        if (!large) map.scrollLeft = 0;
-      });
-    document.querySelector<HTMLElement>('.map-scale')!.hidden = false;
+    import '../../scripts/field-map';
   </script>
 </Base>
